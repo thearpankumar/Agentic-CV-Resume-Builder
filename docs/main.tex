@@ -1,0 +1,168 @@
+\documentclass[10pt,a4paper]{article}
+
+% --- PACKAGES ---
+\usepackage[utf8]{inputenc}
+\usepackage[
+    margin=0.5in,
+    top=0.6in,
+    bottom=0.6in
+]{geometry}
+\usepackage{enumitem}
+\usepackage[explicit]{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{helvet} % Use Helvetica-like font for sans-serif
+\usepackage{fontawesome5} % Added package for icons
+
+% --- COLOR & HYPERLINK DEFINITION ---
+\definecolor{darkblue}{RGB}{0, 51, 102}
+\definecolor{graytext}{RGB}{80, 80, 80}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=darkblue,
+    urlcolor=darkblue,
+    citecolor=darkblue,
+    pdftitle={Arpan Kumar Mandal - Resume},
+    pdfauthor={Arpan Kumar Mandal}
+}
+
+% --- PAGE & FONT SETUP ---
+\pagestyle{empty}
+\renewcommand{\familydefault}{\sfdefault} % Set default font to sans-serif
+\setlength{\parindent}{0pt} % No paragraph indentation
+
+% --- ROBUST SECTION FORMATTING ---
+\titleformat{\section}
+  {\large\bfseries\sffamily\color{darkblue}}
+  {}
+  {0em}
+  {\MakeUppercase{#1}}
+  [\vspace{1pt}\noindent\rule{\linewidth}{0.8pt}\vspace{-7pt}\noindent\rule{\linewidth}{0.4pt}]
+\titlespacing*{\section}{0pt}{12pt}{12pt}
+
+% Sidebar Sections
+\titleformat{\subsection}
+  {\sffamily\bfseries\color{black}}
+  {}
+  {0em}
+  {}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+% --- LIST SPACING ---
+\setlist[itemize]{
+    noitemsep,
+    topsep=2pt,
+    leftmargin=*,
+    itemsep=2pt,
+    parsep=2pt
+}
+
+% --- DOCUMENT START ---
+\begin{document}
+
+% --- CLEAN & SIMPLE HEADER ---
+\begin{center}
+    {\Huge\bfseries\sffamily Arpan Kumar Mandal}
+    \vspace{4pt}
+    \noindent\rule{\linewidth}{0.8pt}
+\end{center}
+\vspace{16pt}
+
+
+% --- TWO-COLUMN LAYOUT ---
+\begin{minipage}[t]{0.3\textwidth}
+    \sffamily % Use sans-serif font for the entire sidebar
+    
+    \subsection*{Contact}
+    \href{mailto:am8131@srmist.edu.in}{am8131@srmist.edu.in} \\
+    8979092851 \\
+    Chennai, TN
+    \vspace{10pt}
+
+    \subsection*{Technical Skills}
+    \textbf{Programming Languages:} \\
+    Python, Rust, C++, CUDA, JavaScript, SQL \\[5pt]
+    \textbf{AI and ML Frameworks:} \\
+    TensorFlow, PyTorch, XGBoost, Generative AI, RAG \\[5pt]
+    \textbf{Technologies:} \\
+    FastAPI, Docker, Git, Linux Systems, Vector Databases \\[5pt]
+    \textbf{Cybersecurity Skills:} \\
+    Penetration Testing, Network Security, Vulnerability Assessment \\[5pt]
+    \textbf{Data Science & Bioinformatics:} \\
+    Data Visualization, Genomics, Statistical Analysis
+    \vspace{10pt}
+
+    \subsection*{Education}
+    \textbf{B.Tech in Genetic Engineering} \\
+    SRM Institute of Science and Technology \\
+    \textit{Expected Jan 2026} \\[8pt]
+    
+    \textbf{Class XII} \\
+    Kendriya Vidyalaya Sangathan \\
+    \textit{88\% | Jan 2022}
+    \vspace{10pt}
+
+    \subsection*{Profiles}
+    \faLinkedin\hspace{4pt} \href{https://www.linkedin.com/in/thearpankumar}{linkedin.com/in/thearpankumar} \\
+    \vspace{4pt}
+    \faGithub\hspace{4pt} \href{https://github.com/thearpankumar}{github.com/thearpankumar}
+
+\end{minipage}
+\hspace{0.05\textwidth} % Space between columns
+\begin{minipage}[t]{0.65\textwidth}
+    \sffamily 
+
+    \section{Professional Summary}
+    Computer Science enthusiast with expertise in AI/ML, cybersecurity, and software development. Passionate about creating innovative solutions that bridge technology gaps and enhance system performance through advanced algorithms and cutting-edge technologies.
+    
+    \section{Projects}
+    \textbf{EncryptiV -- Client-Side Encrypted Microservices Platform} \hfill May 2024 -- Present
+    \begin{itemize}
+        \item Developed a secure file storage platform with client-side, zero-knowledge encryption, featuring high-performance backend microservices in Rust and an SDK for developer integration.
+    \end{itemize}
+
+    \textbf{GPU Vector DB -- AI Document Processing Platform} \hfill Jan 2024 – Mar 2024
+    \begin{itemize}
+        \item Built a GPU-accelerated AI platform for financial services with intelligent Q\&A, multi-LLM support, and a RAG architecture using Qdrant, FastAPI, and parallel processing.
+    \end{itemize}
+    
+    \textbf{Samsung AI-OS -- Voice-Controlled Cybersecurity Platform} \hfill Apr 2024 – Jun 2024
+    \begin{itemize}
+        \item Developed a voice-controlled AI automation system that integrates Kali Linux to execute complex penetration testing and security workflows via natural language commands.
+    \end{itemize}
+
+    \textbf{XGBoost CO\textsubscript{2} Adsorption Prediction Model} \hfill Aug 2024 – Oct 2024
+    \begin{itemize}
+        \item Implemented an XGBoost model to predict nano-material CO\textsubscript{2} adsorption, achieving high accuracy in identifying optimal configurations for carbon capture systems.
+    \end{itemize}
+
+    \section{Professional Experience}
+    \textbf{SafelyAPK -- Security Analyst Intern} \hfill Jun 2024 – Jul 2024
+    \begin{itemize}
+        \item Conducted reverse engineering on mobile applications to identify vulnerabilities, malware, and data leaks using advanced static and dynamic analysis techniques.
+    \end{itemize}
+    
+    \textbf{SRM-IST, CENTINEL -- Founder/Vice-President} \hfill Oct 2023 – Oct 2024
+    \begin{itemize}
+        \item Founded and led a cybersecurity club, organizing hands-on workshops and competitions to foster practical skill development in students.
+    \end{itemize}
+    
+    \textbf{Fiverr -- Freelance Developer} \hfill Feb 2023 – Jun 2023
+    \begin{itemize}
+        \item Delivered Python-based automation scripts and web solutions to a global clientele, managing projects from conception to deployment.
+    \end{itemize}
+
+    \section{Research Experience}
+    \textbf{Encryption as a Service (EaaS) Platform Development} \hfill May 2024 – Present
+    \begin{itemize}
+        \item Building a comprehensive, scalable encryption platform with API integration to provide robust security solutions for enterprise applications.
+    \end{itemize}
+    
+    \textbf{AI-Based Virtual Psychiatrist Development} \hfill Oct 2023 – Jan 2024
+    \begin{itemize}
+        \item Developed a Generative AI-based LLM with hallucination-reduction techniques to provide ethical and reliable mental health support.
+    \end{itemize}
+
+\end{minipage}
+
+\end{document}
