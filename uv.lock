@@ -13,22 +13,28 @@ source = { virtual = "." }
 dependencies = [
     { name = "groq" },
     { name = "psycopg2-binary" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
     { name = "python-dotenv" },
     { name = "sqlalchemy" },
     { name = "streamlit" },
     { name = "streamlit-ace" },
     { name = "streamlit-pdf-viewer" },
+    { name = "streamlit-sortables" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "groq", specifier = ">=0.31.1" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "pydantic", specifier = ">=2.11.7" },
+    { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "sqlalchemy", specifier = ">=2.0.43" },
     { name = "streamlit", specifier = ">=1.49.1" },
     { name = "streamlit-ace", specifier = ">=0.1.1" },
     { name = "streamlit-pdf-viewer", specifier = ">=0.0.26" },
+    { name = "streamlit-sortables", specifier = ">=0.2.0" },
 ]
 
 [[package]]
@@ -803,6 +809,20 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-settings"
+version = "2.10.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "typing-inspection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/68/85/1ea668bbab3c50071ca613c6ab30047fb36ab0da1b92fa8f17bbc38fd36c/pydantic_settings-2.10.1.tar.gz", hash = "sha256:06f0062169818d0f5524420a360d632d5857b83cffd4d42fe29597807a1614ee", size = 172583, upload-time = "2025-06-24T13:26:46.841Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/58/f0/427018098906416f580e3cf1366d3b1abfb408a0652e9f31600c24a1903c/pydantic_settings-2.10.1-py3-none-any.whl", hash = "sha256:a60952460b99cf661dc25c29c0ef171721f98bfcb52ef8d9ea4c943d7c8cc796", size = 45235, upload-time = "2025-06-24T13:26:45.485Z" },
+]
+
+[[package]]
 name = "pydeck"
 version = "0.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1097,6 +1117,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a8/86/19070a89e0140ec3744908cfee660d9f5a0498f7eeaeb916006222f64598/streamlit_pdf_viewer-0.0.26.tar.gz", hash = "sha256:360560b04b01f4805dccbece16e649077e2983a753102c4c95338d8c5234a7d2", size = 2556416, upload-time = "2025-06-23T20:53:49.039Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1b/c6/f9309b16cd987c61f3144489fdae57d6692f24e272880b65d57600e6ae36/streamlit_pdf_viewer-0.0.26-py3-none-any.whl", hash = "sha256:d6fcc9b1bb0d79e07d3c3506b5467bf79b9c3aada15ffa052e9bf3b913df33aa", size = 2598801, upload-time = "2025-06-23T20:53:47.562Z" },
+]
+
+[[package]]
+name = "streamlit-sortables"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "streamlit" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/11/10/00c3ae0f183d41bb3608157283a2c92e4f4db87cb21a73e96b3c2c2ca58f/streamlit_sortables-0.3.1.tar.gz", hash = "sha256:9bed78f4407f2b9b1ddead8b6459d1af839aab427b7b5fe4c091e6870630acfe", size = 564139, upload-time = "2025-01-13T07:37:44.533Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3d/b4/edbef9fa8e49f5df2745a178c44b23553d8472c22fb23f44f6949d544410/streamlit_sortables-0.3.1-py3-none-any.whl", hash = "sha256:1847b2fa2041762b6442e21224bd8c0316c5412e4eb3a38fa748cf7ced834d49", size = 570356, upload-time = "2025-01-13T07:37:42.852Z" },
 ]
 
 [[package]]

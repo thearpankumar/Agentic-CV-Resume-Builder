@@ -1,32 +1,32 @@
-import os
 from typing import List, Dict, Any, Optional, Tuple
 import streamlit as st
 from groq import Groq
-from dotenv import load_dotenv
-
-load_dotenv()
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.settings import settings
 
 class GroqClient:
-    """Client for interacting with Groq API"""
-    
+    """Client for interacting with Groq API using Pydantic settings"""
+
     def __init__(self):
-        self.api_key = os.getenv('GROQ_API_KEY')
+        self.config = settings.get_groq_config()
         self.client = None
         self._initialize_client()
-    
+
     def _initialize_client(self):
         """Initialize Groq client"""
-        if self.api_key:
+        if settings.is_groq_available:
             try:
-                self.client = Groq(api_key=self.api_key)
+                self.client = Groq(api_key=self.config["api_key"])
             except Exception as e:
                 st.error(f"Failed to initialize Groq client: {e}")
         else:
-            st.warning("Groq API key not found. AI features will be disabled.")
-    
+            st.warning("Groq API key not found in settings. AI features will be disabled.")
+
     def is_available(self) -> bool:
         """Check if Groq client is available"""
-        return self.client is not None
+        return self.client is not None and settings.is_groq_available
     
     def generate_professional_summary(
         self, 
@@ -48,7 +48,9 @@ class GroqClient:
             
             # Call Groq API
             response = self.client.chat.completions.create(
-                model="llama3-8b-8192",  # Use Llama 3 model
+                model=self.config.get("model", "openai/gpt-oss-120b"),
+                max_tokens=self.config.get("max_tokens", 2000),
+                temperature=self.config.get("temperature", 0.7),
                 messages=[
                     {
                         "role": "system",
@@ -58,9 +60,7 @@ class GroqClient:
                         "role": "user",
                         "content": prompt
                     }
-                ],
-                max_tokens=200,
-                temperature=0.7
+                ]
             )
             
             return response.choices[0].message.content.strip()
@@ -86,7 +86,9 @@ class GroqClient:
             prompt = self._create_project_selection_prompt(projects, job_description, max_projects)
             
             response = self.client.chat.completions.create(
-                model="llama3-8b-8192",
+                model=self.config.get("model", "openai/gpt-oss-120b"),
+                max_tokens=self.config.get("max_tokens", 2000),
+                temperature=self.config.get("temperature", 0.7),
                 messages=[
                     {
                         "role": "system",
@@ -96,9 +98,7 @@ class GroqClient:
                         "role": "user",
                         "content": prompt
                     }
-                ],
-                max_tokens=300,
-                temperature=0.3
+                ]
             )
             
             # Parse response to get project indices
@@ -130,7 +130,9 @@ class GroqClient:
             prompt = self._create_content_optimization_prompt(content, content_type, job_description)
             
             response = self.client.chat.completions.create(
-                model="llama3-8b-8192",
+                model=self.config.get("model", "openai/gpt-oss-120b"),
+                max_tokens=self.config.get("max_tokens", 2000),
+                temperature=self.config.get("temperature", 0.7),
                 messages=[
                     {
                         "role": "system",
@@ -140,9 +142,7 @@ class GroqClient:
                         "role": "user",
                         "content": prompt
                     }
-                ],
-                max_tokens=250,
-                temperature=0.5
+                ]
             )
             
             return response.choices[0].message.content.strip()
@@ -166,7 +166,9 @@ class GroqClient:
             prompt = self._create_skills_recommendation_prompt(current_skills, job_description)
             
             response = self.client.chat.completions.create(
-                model="llama3-8b-8192",
+                model=self.config.get("model", "openai/gpt-oss-120b"),
+                max_tokens=self.config.get("max_tokens", 2000),
+                temperature=self.config.get("temperature", 0.7),
                 messages=[
                     {
                         "role": "system",
@@ -176,9 +178,7 @@ class GroqClient:
                         "role": "user",
                         "content": prompt
                     }
-                ],
-                max_tokens=150,
-                temperature=0.4
+                ]
             )
             
             # Parse skills from response
@@ -204,7 +204,9 @@ class GroqClient:
             prompt = self._create_reframe_prompt(content, content_type, improvement_focus)
             
             response = self.client.chat.completions.create(
-                model="llama3-8b-8192",
+                model=self.config.get("model", "openai/gpt-oss-120b"),
+                max_tokens=self.config.get("max_tokens", 2000),
+                temperature=self.config.get("temperature", 0.7),
                 messages=[
                     {
                         "role": "system",
@@ -214,9 +216,7 @@ class GroqClient:
                         "role": "user",
                         "content": prompt
                     }
-                ],
-                max_tokens=300,
-                temperature=0.6
+                ]
             )
             
             return response.choices[0].message.content.strip()
@@ -245,7 +245,9 @@ class GroqClient:
             )
             
             response = self.client.chat.completions.create(
-                model="llama3-8b-8192",
+                model=self.config.get("model", "openai/gpt-oss-120b"),
+                max_tokens=self.config.get("max_tokens", 2000),
+                temperature=self.config.get("temperature", 0.7),
                 messages=[
                     {
                         "role": "system",
@@ -255,9 +257,7 @@ class GroqClient:
                         "role": "user",
                         "content": prompt
                     }
-                ],
-                max_tokens=250,
-                temperature=0.7
+                ]
             )
             
             return response.choices[0].message.content.strip()
@@ -272,12 +272,14 @@ class GroqClient:
         """
         if not self.is_available():
             return {}
-        
+
         try:
             prompt = self._create_job_analysis_prompt(job_description)
-            
+
             response = self.client.chat.completions.create(
-                model="llama3-8b-8192",
+                model=self.config.get("model", "openai/gpt-oss-120b"),
+                max_tokens=self.config.get("max_tokens", 2000),
+                temperature=self.config.get("temperature", 0.7),
                 messages=[
                     {
                         "role": "system",
@@ -287,16 +289,57 @@ class GroqClient:
                         "role": "user",
                         "content": prompt
                     }
-                ],
-                max_tokens=400,
-                temperature=0.3
+                ]
             )
-            
+
             return self._parse_job_analysis(response.choices[0].message.content)
-            
+
         except Exception as e:
             st.error(f"Error analyzing job posting: {e}")
             return {}
+
+    def analyze_section_relevance(self, user_data: Dict[str, Any], job_description: str) -> Dict[str, bool]:
+        """
+        Analyze whether each resume section is relevant for the job posting
+        Returns: {section_name: should_include_boolean}
+        """
+        if not self.is_available():
+            # Fallback: include all sections with content
+            sections_to_check = [
+                'professional_summaries', 'projects', 'professional_experience',
+                'research_experience', 'education', 'technical_skills', 'certifications'
+            ]
+            return {section: bool(user_data.get(section, [])) for section in sections_to_check}
+
+        try:
+            prompt = self._create_section_relevance_prompt(user_data, job_description)
+
+            response = self.client.chat.completions.create(
+                model=self.config.get("model", "openai/gpt-oss-120b"),
+                max_tokens=self.config.get("max_tokens", 2000),
+                temperature=self.config.get("temperature", 0.7),
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a professional resume advisor. Analyze which resume sections are relevant for a specific job and should be included or excluded."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+
+            return self._parse_section_relevance_response(response.choices[0].message.content)
+
+        except Exception as e:
+            st.error(f"Error analyzing section relevance: {e}")
+            # Fallback: include all sections with content
+            sections_to_check = [
+                'professional_summaries', 'projects', 'professional_experience',
+                'research_experience', 'education', 'technical_skills', 'certifications'
+            ]
+            return {section: bool(user_data.get(section, [])) for section in sections_to_check}
     
     def _build_user_context(self, user_data: Dict[str, Any]) -> str:
         """Build context string from user data"""
@@ -581,6 +624,108 @@ ANALYSIS:"""
                         analysis[current_section].append(content)
             
             return analysis
-            
+
         except Exception:
             return {'technical_skills': [], 'qualifications': [], 'responsibilities': [], 'keywords': [], 'experience_level': 'Unknown'}
+
+    def _create_section_relevance_prompt(self, user_data: Dict[str, Any], job_description: str) -> str:
+        """Create prompt for section relevance analysis"""
+        # Build summary of user's sections
+        sections_info = []
+
+        sections_to_analyze = {
+            'professional_summaries': 'Professional Summary',
+            'projects': 'Projects',
+            'professional_experience': 'Professional Experience',
+            'research_experience': 'Research Experience',
+            'education': 'Education',
+            'technical_skills': 'Technical Skills',
+            'certifications': 'Certifications'
+        }
+
+        for section_key, section_name in sections_to_analyze.items():
+            section_data = user_data.get(section_key, [])
+            if section_data:
+                count = len(section_data)
+                # Get brief content summary
+                if section_key == 'projects':
+                    titles = [p.get('title', 'Untitled') for p in section_data[:3]]
+                    preview = f"Projects: {', '.join(titles)}"
+                elif section_key == 'professional_experience':
+                    positions = [f"{exp.get('position', '')} at {exp.get('company', '')}" for exp in section_data[:2]]
+                    preview = f"Experience: {', '.join(positions)}"
+                elif section_key == 'technical_skills':
+                    categories = [skill.get('category', '') for skill in section_data[:3]]
+                    preview = f"Skills: {', '.join(categories)}"
+                else:
+                    preview = f"{count} items"
+
+                sections_info.append(f"- {section_name}: {preview}")
+            else:
+                sections_info.append(f"- {section_name}: No content")
+
+        return f"""
+Analyze which resume sections should be INCLUDED or EXCLUDED for this specific job posting.
+
+JOB DESCRIPTION:
+{job_description}
+
+AVAILABLE RESUME SECTIONS:
+{chr(10).join(sections_info)}
+
+For each section, determine if it's RELEVANT for this job posting. Consider:
+1. Does the section content align with job requirements?
+2. Would recruiters find this section valuable for this role?
+3. Does the section demonstrate relevant skills/experience?
+4. Is the content strong enough to add value?
+
+If a section has no content or weak/irrelevant content, mark it as EXCLUDE.
+If a section is highly relevant and adds value, mark it as INCLUDE.
+
+Respond with ONLY a simple list format:
+professional_summaries: INCLUDE/EXCLUDE
+projects: INCLUDE/EXCLUDE
+professional_experience: INCLUDE/EXCLUDE
+research_experience: INCLUDE/EXCLUDE
+education: INCLUDE/EXCLUDE
+technical_skills: INCLUDE/EXCLUDE
+certifications: INCLUDE/EXCLUDE"""
+
+    def _parse_section_relevance_response(self, response: str) -> Dict[str, bool]:
+        """Parse section relevance analysis response"""
+        try:
+            section_decisions = {}
+            lines = response.strip().split('\n')
+
+            for line in lines:
+                line = line.strip()
+                if ':' in line:
+                    parts = line.split(':')
+                    if len(parts) == 2:
+                        section = parts[0].strip()
+                        decision = parts[1].strip().upper()
+                        section_decisions[section] = decision == 'INCLUDE'
+
+            # Ensure all expected sections are present
+            expected_sections = [
+                'professional_summaries', 'projects', 'professional_experience',
+                'research_experience', 'education', 'technical_skills', 'certifications'
+            ]
+
+            for section in expected_sections:
+                if section not in section_decisions:
+                    section_decisions[section] = True  # Default to include if unclear
+
+            return section_decisions
+
+        except Exception:
+            # Fallback: include all sections
+            return {
+                'professional_summaries': True,
+                'projects': True,
+                'professional_experience': True,
+                'research_experience': True,
+                'education': True,
+                'technical_skills': True,
+                'certifications': True
+            }

@@ -22,17 +22,34 @@ class HeaderBlock:
             return self._generate_simple_header(name, email, phone, location, linkedin, github)
     
     def _generate_arpan_header(self, name: str, email: str, phone: str, location: str, linkedin: str, github: str) -> str:
-        """Generate Arpan style header with clean design"""
+        """Generate Arpan style header with contact info in header"""
         header_parts = []
-        
-        header_parts.append("% --- CLEAN & SIMPLE HEADER ---")
+
+        header_parts.append("% --- HEADER WITH CONTACT INFO ---")
         header_parts.append("\\begin{center}")
-        header_parts.append(f"    {{\\Huge\\bfseries\\sffamily {self._escape_latex(name)}}}")
+
+        # Name in ALL CAPS with bigger font size
+        name_upper = name.upper()
+        header_parts.append(f"    {{\\Large\\bfseries\\sffamily {self._escape_latex(name_upper)}}}")
+        header_parts.append("    \\\\")  # Force line break after name
+        header_parts.append("    \\vspace{2pt}")
+
+        # Contact line: Email and Phone only
+        contact_info = []
+        if email:
+            contact_info.append(f"\\href{{mailto:{email}}}{{{email}}}")
+        if phone:
+            contact_info.append(phone)
+
+        if contact_info:
+            bullet_sep = ' $\\bullet$ '
+            header_parts.append(f"    {{\\small {bullet_sep.join(contact_info)}}}")
+
         header_parts.append("    \\vspace{4pt}")
         header_parts.append("    \\noindent\\rule{\\linewidth}{0.8pt}")
         header_parts.append("\\end{center}")
-        header_parts.append("\\vspace{16pt}")
-        
+        header_parts.append("\\vspace{12pt}")
+
         return "\n".join(header_parts)
     
     def _generate_simple_header(self, name: str, email: str, phone: str, location: str, linkedin: str, github: str) -> str:

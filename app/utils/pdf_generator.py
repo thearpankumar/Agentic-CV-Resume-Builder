@@ -6,14 +6,25 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 import streamlit as st
 from latex_templates.base_template import BaseTemplate
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.settings import settings
 
 class PDFGenerator:
     """Handles LaTeX to PDF conversion"""
     
     def __init__(self, session_id: str = None):
-        # Use session-based temp directory for consistency
-        if session_id:
+        # Use configured temp directory or fallback to system temp
+        if settings.pdf_temp_dir:
+            temp_base = settings.pdf_temp_dir
+            os.makedirs(temp_base, exist_ok=True)
+        elif session_id:
             temp_base = tempfile.gettempdir()
+        else:
+            temp_base = tempfile.gettempdir()
+
+        if session_id:
             self.temp_dir = os.path.join(temp_base, f"cv_builder_{session_id}")
             os.makedirs(self.temp_dir, exist_ok=True)
         else:
@@ -35,11 +46,12 @@ class PDFGenerator:
             return False
     
     def generate_pdf_from_data(
-        self, 
-        user_data: Dict[str, Any], 
-        template_style: str = "arpan", 
+        self,
+        user_data: Dict[str, Any],
+        template_style: str = "arpan",
         active_sections: List[str] = None,
-        section_order: List[str] = None
+        section_order: List[str] = None,
+        font_size: str = "10pt"
     ) -> Tuple[Optional[str], Optional[str]]:
         """
         Generate PDF from user data
@@ -49,8 +61,8 @@ class PDFGenerator:
             return None, "LaTeX not installed. Please install texlive-full or similar package."
         
         try:
-            # Create template instance
-            template = BaseTemplate(template_style)
+            # Create template instance with font size
+            template = BaseTemplate(template_style, font_size)
             
             # Set defaults if not provided
             if active_sections is None:
@@ -115,7 +127,7 @@ class PDFGenerator:
                 ],
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=settings.latex_timeout,
                 cwd=self.temp_dir
             )
             
@@ -161,10 +173,11 @@ class PDFGenerator:
             return None
     
     def get_latex_template(
-        self, 
+        self,
         template_style: str = "arpan",
         active_sections: List[str] = None,
-        section_order: List[str] = None
+        section_order: List[str] = None,
+        font_size: str = "10pt"
     ) -> str:
         """
         Get LaTeX template with sample data
@@ -172,8 +185,8 @@ class PDFGenerator:
         # Sample data for template
         sample_data = self.get_sample_data()
         
-        # Create template instance
-        template = BaseTemplate(template_style)
+        # Create template instance with font size
+        template = BaseTemplate(template_style, font_size)
         
         # Set defaults if not provided
         if active_sections is None:

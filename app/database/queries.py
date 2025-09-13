@@ -38,6 +38,116 @@ class UserQueries:
             session.refresh(user)
         return user
 
+    @staticmethod
+    def get_user_with_all_data(session: Session, user_id: int) -> Optional[Dict[str, Any]]:
+        """Get user with all related data"""
+        user = session.query(User).filter(User.id == user_id).first()
+        if not user:
+            return None
+
+        # Convert user to dict
+        user_dict = {
+            'user': {
+                'id': user.id,
+                'name': user.name,
+                'email': user.email,
+                'phone': user.phone,
+                'linkedin_url': user.linkedin_url,
+                'github_url': user.github_url,
+                'location': user.location
+            }
+        }
+
+        # Get projects
+        projects = session.query(Project).filter(Project.user_id == user_id).all()
+        user_dict['projects'] = []
+        for project in projects:
+            user_dict['projects'].append({
+                'id': project.id,
+                'title': project.title,
+                'description': project.description,
+                'technologies': project.technologies,
+                'start_date': project.start_date,
+                'end_date': project.end_date,
+                'project_url': project.project_url,
+                'display_order': project.display_order
+            })
+
+        # Get professional experience
+        prof_exp = session.query(ProfessionalExperience).filter(ProfessionalExperience.user_id == user_id).all()
+        user_dict['professional_experience'] = []
+        for exp in prof_exp:
+            user_dict['professional_experience'].append({
+                'id': exp.id,
+                'company': exp.company,
+                'position': exp.position,
+                'description': exp.description,
+                'start_date': exp.start_date,
+                'end_date': exp.end_date,
+                'display_order': exp.display_order
+            })
+
+        # Get research experience
+        research_exp = session.query(ResearchExperience).filter(ResearchExperience.user_id == user_id).all()
+        user_dict['research_experience'] = []
+        for exp in research_exp:
+            user_dict['research_experience'].append({
+                'id': exp.id,
+                'title': exp.title,
+                'description': exp.description,
+                'start_date': exp.start_date,
+                'end_date': exp.end_date,
+                'display_order': exp.display_order
+            })
+
+        # Get education
+        education = session.query(Education).filter(Education.user_id == user_id).all()
+        user_dict['education'] = []
+        for edu in education:
+            user_dict['education'].append({
+                'id': edu.id,
+                'degree': edu.degree,
+                'institution': edu.institution,
+                'graduation_date': edu.graduation_date,
+                'gpa_percentage': edu.gpa_percentage,
+                'display_order': edu.display_order
+            })
+
+        # Get technical skills
+        skills = session.query(TechnicalSkill).filter(TechnicalSkill.user_id == user_id).all()
+        user_dict['technical_skills'] = []
+        for skill in skills:
+            user_dict['technical_skills'].append({
+                'id': skill.id,
+                'category': skill.category,
+                'skills': skill.skills,
+                'display_order': skill.display_order
+            })
+
+        # Get certifications
+        certs = session.query(Certification).filter(Certification.user_id == user_id).all()
+        user_dict['certifications'] = []
+        for cert in certs:
+            user_dict['certifications'].append({
+                'id': cert.id,
+                'title': cert.title,
+                'issuer': cert.issuer,
+                'date_obtained': cert.date_obtained,
+                'display_order': cert.display_order
+            })
+
+        # Get professional summaries
+        summaries = session.query(ProfessionalSummary).filter(ProfessionalSummary.user_id == user_id).all()
+        user_dict['professional_summaries'] = []
+        for summary in summaries:
+            user_dict['professional_summaries'].append({
+                'id': summary.id,
+                'job_description': summary.job_description,
+                'generated_summary': summary.generated_summary
+            })
+
+        return user_dict
+
 class ProjectQueries:
     @staticmethod
     def create_project(session: Session, user_id: int, project_data: Dict[str, Any]) -> Project:

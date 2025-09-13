@@ -7,12 +7,14 @@ from .blocks.research import ResearchBlock
 from .blocks.education import EducationBlock
 from .blocks.skills import SkillsBlock
 from .blocks.certs import CertificationsBlock
+from .blocks.social_links import SocialLinksBlock
 
 class BaseTemplate:
     """Base class for LaTeX resume templates"""
     
-    def __init__(self, template_style: str = "arpan"):
+    def __init__(self, template_style: str = "arpan", font_size: str = "10pt"):
         self.template_style = template_style
+        self.font_size = font_size
         self.blocks = {
             "header": HeaderBlock(template_style),
             "professional_summary": SummaryBlock(template_style),
@@ -21,7 +23,8 @@ class BaseTemplate:
             "research_experience": ResearchBlock(template_style),
             "education": EducationBlock(template_style),
             "technical_skills": SkillsBlock(template_style),
-            "certifications": CertificationsBlock(template_style)
+            "certifications": CertificationsBlock(template_style),
+            "social_links": SocialLinksBlock(template_style)
         }
     
     def get_document_preamble(self) -> str:
@@ -33,8 +36,8 @@ class BaseTemplate:
     
     def _get_arpan_preamble(self) -> str:
         """Arpan style preamble (modern, two-column)"""
-        return r"""
-\documentclass[10pt,a4paper]{article}
+        preamble = r"""
+\documentclass[FONT_SIZE,a4paper]{article}
 
 % --- PACKAGES ---
 \usepackage[utf8]{inputenc}
@@ -68,21 +71,22 @@ class BaseTemplate:
 \setlength{\parindent}{0pt}
 
 % --- ROBUST SECTION FORMATTING ---
+% Main sections (medium size headings)
 \titleformat{\section}
-  {\large\bfseries\sffamily\color{darkblue}}
+  {\normalsize\bfseries\sffamily\color{darkblue}}
   {}
   {0em}
   {#1}
   [\vspace{2pt}\noindent\rule{\linewidth}{0.8pt}]
-\titlespacing*{\section}{0pt}{12pt}{12pt}
+\titlespacing*{\section}{0pt}{10pt}{8pt}
 
-% Sidebar Sections
+% Sidebar Sections (smaller headings)
 \titleformat{\subsection}
-  {\sffamily\bfseries\color{black}}
+  {\small\sffamily\bfseries\color{black}}
   {}
   {0em}
   {}
-\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{4pt}
 
 % --- LIST SPACING ---
 \setlist[itemize]{
@@ -92,7 +96,14 @@ class BaseTemplate:
     itemsep=2pt,
     parsep=2pt
 }
+
+% --- CUSTOM ENVIRONMENTS ---
+% Sidebar environment with smaller font
+\newenvironment{sidebarenv}
+  {\small}
+  {}
 """
+        return preamble.replace("FONT_SIZE", self.font_size)
     
     def _get_simple_preamble(self) -> str:
         """Simple style preamble (single column, clean)"""
@@ -169,14 +180,19 @@ class BaseTemplate:
         # Two-column layout
         latex_parts.append("% --- TWO-COLUMN LAYOUT ---")
         latex_parts.append("\\begin{minipage}[t]{0.3\\textwidth}")
+        latex_parts.append("\\begin{sidebarenv}")
         latex_parts.append("    \\sffamily")
-        
-        # Left sidebar sections
+
+        # Left sidebar sections - social links always included (static)
         sidebar_sections = ["education", "technical_skills", "certifications"]
         for section in sidebar_sections:
             if section in active_sections and section in self.blocks:
                 latex_parts.append(self.blocks[section].generate(user_data))
-        
+
+        # Always add social links to sidebar (static, not controlled by AI)
+        latex_parts.append(self.blocks["social_links"].generate(user_data))
+
+        latex_parts.append("\\end{sidebarenv}")
         latex_parts.append("\\end{minipage}")
         latex_parts.append("\\hspace{0.05\\textwidth}")
         latex_parts.append("\\begin{minipage}[t]{0.65\\textwidth}")

@@ -1,29 +1,29 @@
-import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
-from dotenv import load_dotenv
 import streamlit as st
-
-load_dotenv()
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config.settings import settings
 
 Base = declarative_base()
 
 class DatabaseConnection:
     def __init__(self):
-        self.database_url = os.getenv('DATABASE_URL', 'postgresql://cv_user:cv_password@localhost:5432/cv_builder')
+        self.database_config = settings.database_config
         self.engine = None
         self.SessionLocal = None
         self._initialize_connection()
-    
+
     def _initialize_connection(self):
         try:
             self.engine = create_engine(
-                self.database_url,
+                self.database_config["url"],
                 pool_pre_ping=True,
                 pool_recycle=300,
-                echo=False
+                echo=self.database_config["echo"]
             )
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         except Exception as e:

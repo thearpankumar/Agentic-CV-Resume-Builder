@@ -101,12 +101,10 @@ class ExperienceBlock:
         """Split description into bullet points"""
         if not description:
             return ["Experience description"]
-        
-        # If description already contains bullet points or line breaks, split on them
+
+        # Only split on bullet point characters (•)
         if '•' in description:
             return [desc.strip() for desc in description.split('•') if desc.strip()]
-        elif '\n' in description:
-            return [desc.strip() for desc in description.split('\n') if desc.strip()]
         else:
             # For single description, return as single bullet point
             return [description.strip()]
