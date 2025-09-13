@@ -647,9 +647,9 @@ STREAMLIT_LOGGER_LEVEL=debug
 
 We believe in the power of collaboration! Your contributions make this project better for everyone.
 
-[![Contributors](https://img.shields.io/github/contributors/yourusername/Agentic-CV-Resume-Builder?style=for-the-badge)](https://github.com/yourusername/Agentic-CV-Resume-Builder/graphs/contributors)
-[![Stars](https://img.shields.io/github/stars/yourusername/Agentic-CV-Resume-Builder?style=for-the-badge)](https://github.com/yourusername/Agentic-CV-Resume-Builder/stargazers)
-[![Forks](https://img.shields.io/github/forks/yourusername/Agentic-CV-Resume-Builder?style=for-the-badge)](https://github.com/yourusername/Agentic-CV-Resume-Builder/network/members)
+[![Contributors](https://img.shields.io/github/contributors/thearpankumar/Agentic-CV-Resume-Builder?style=for-the-badge)](https://github.com/thearpankumar/Agentic-CV-Resume-Builder/graphs/contributors)
+[![Stars](https://img.shields.io/github/stars/thearpankumar/Agentic-CV-Resume-Builder?style=for-the-badge)](https://github.com/thearpankumar/Agentic-CV-Resume-Builder/stargazers)
+[![Forks](https://img.shields.io/github/forks/thearpankumar/Agentic-CV-Resume-Builder?style=for-the-badge)](https://github.com/thearpankumar/Agentic-CV-Resume-Builder/network/members)
 
 </div>
 
