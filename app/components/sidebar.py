@@ -7,6 +7,28 @@ from database.queries import (
 )
 from utils.validators import DataValidator
 from ai_integration.groq_client import GroqClient
+from config.settings import settings
+
+def get_user_api_key():
+    """Get Groq API key from user input if not in environment"""
+    if settings.groq_api_key:
+        return settings.groq_api_key
+    
+    with st.sidebar:
+        st.markdown("### 🔑 API Configuration")
+        api_key = st.text_input(
+            "Enter your Groq API Key",
+            type="password",
+            help="Get your free API key from https://console.groq.com/keys",
+            key="user_groq_api_key"
+        )
+        if api_key:
+            st.success("✅ API Key configured")
+        else:
+            st.warning("⚠️ Please enter your Groq API key to use AI features")
+        
+        st.markdown("---")
+    return api_key
 
 def render_sidebar() -> bool:
     """

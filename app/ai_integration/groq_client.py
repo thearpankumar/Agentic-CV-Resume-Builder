@@ -9,24 +9,25 @@ from config.settings import settings
 class GroqClient:
     """Client for interacting with Groq API using Pydantic settings"""
 
-    def __init__(self):
+    def __init__(self, user_api_key: str = None):
+        self.user_api_key = user_api_key
         self.config = settings.get_groq_config()
         self.client = None
         self._initialize_client()
 
     def _initialize_client(self):
         """Initialize Groq client"""
-        if settings.is_groq_available:
+        api_key = self.user_api_key or self.config.get("api_key")
+        
+        if api_key and len(api_key.strip()) > 0:
             try:
-                self.client = Groq(api_key=self.config["api_key"])
+                self.client = Groq(api_key=api_key)
             except Exception as e:
                 st.error(f"Failed to initialize Groq client: {e}")
-        else:
-            st.warning("Groq API key not found in settings. AI features will be disabled.")
 
     def is_available(self) -> bool:
         """Check if Groq client is available"""
-        return self.client is not None and settings.is_groq_available
+        return self.client is not None
     
     def generate_professional_summary(
         self, 

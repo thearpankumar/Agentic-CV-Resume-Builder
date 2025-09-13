@@ -7,7 +7,7 @@ from database.connection import get_db_connection, get_db_session
 from database.queries import UserQueries
 from components.pdf_preview import render_pdf_preview
 from components.latex_editor import render_latex_editor
-from components.sidebar import render_sidebar
+from components.sidebar import render_sidebar, get_user_api_key
 from components.visual_resume_builder import VisualResumeBuilder
 from utils.pdf_generator import PDFGenerator
 from ai_integration.groq_client import GroqClient
@@ -254,7 +254,8 @@ def optimize_resume_for_job(job_description: str):
         st.error("Please select a user first!")
         return
     
-    groq_client = GroqClient()
+    user_api_key = get_user_api_key()
+    groq_client = GroqClient(user_api_key)
     if groq_client.is_available():
         with st.spinner("AI is optimizing your resume for this job..."):
             try:

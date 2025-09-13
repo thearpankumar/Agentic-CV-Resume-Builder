@@ -19,11 +19,17 @@ class DatabaseConnection:
 
     def _initialize_connection(self):
         try:
+            # Add SSL configuration for cloud databases
+            connect_args = {}
+            if "localhost" not in self.database_config["url"]:
+                connect_args["sslmode"] = "require"
+            
             self.engine = create_engine(
                 self.database_config["url"],
                 pool_pre_ping=True,
                 pool_recycle=300,
-                echo=self.database_config["echo"]
+                echo=self.database_config["echo"],
+                connect_args=connect_args
             )
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         except Exception as e:

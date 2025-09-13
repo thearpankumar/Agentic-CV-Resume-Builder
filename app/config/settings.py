@@ -1,6 +1,7 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+import streamlit as st
 
 
 class Settings(BaseSettings):
@@ -63,10 +64,28 @@ class Settings(BaseSettings):
         description="Session timeout in seconds"
     )
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Override with Streamlit secrets if available
+        if hasattr(st, 'secrets'):
+            try:
+                if 'database' in st.secrets and 'DATABASE_URL' in st.secrets.database:
+                    self.database_url = st.secrets.database.DATABASE_URL
+                if 'api' in st.secrets and 'GROQ_API_KEY' in st.secrets.api:
+                    self.groq_api_key = st.secrets.api.GROQ_API_KEY
+                if 'app' in st.secrets and 'DEBUG' in st.secrets.app:
+                    self.debug = st.secrets.app.DEBUG
+            except Exception:
+                pass  # Fallback to environment variables
+
     @property
     def is_groq_available(self) -> bool:
         """Check if Groq API is configured and available."""
         return self.groq_api_key is not None and len(self.groq_api_key.strip()) > 0
+    
+    def is_user_groq_available(self, user_api_key: str) -> bool:
+        """Check if user-provided Groq API key is available."""
+        return user_api_key is not None and len(user_api_key.strip()) > 0
 
     @property
     def database_config(self) -> dict:
