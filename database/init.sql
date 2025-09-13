@@ -55,6 +55,24 @@ CREATE TABLE research_experience (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Academic Collaborations table
+CREATE TABLE academic_collaborations (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    project_title VARCHAR(255) NOT NULL,
+    collaboration_type VARCHAR(100), -- e.g., 'Research', 'Publication', 'Conference', 'Workshop'
+    institution VARCHAR(255),
+    collaborators TEXT, -- Names of collaborators
+    role VARCHAR(255), -- User's role in the collaboration
+    description TEXT,
+    start_date VARCHAR(50),
+    end_date VARCHAR(50),
+    publication_url VARCHAR(255),
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Education table
 CREATE TABLE education (
     id SERIAL PRIMARY KEY,

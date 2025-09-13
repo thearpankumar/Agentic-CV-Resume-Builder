@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, desc
 from typing import List, Optional, Dict, Any
 from .models import (
-    User, Project, ProfessionalExperience, ResearchExperience,
+    User, Project, ProfessionalExperience, ResearchExperience, AcademicCollaboration,
     Education, TechnicalSkill, Certification, ProfessionalSummary,
     ResumeConfiguration
 )
@@ -123,6 +123,66 @@ class ExperienceQueries:
             session.refresh(experience)
         return experience
 
+    @staticmethod
+    def update_research_experience(session: Session, research_id: int, research_data: Dict[str, Any]) -> Optional[ResearchExperience]:
+        """Update research experience information"""
+        research = session.query(ResearchExperience).filter(ResearchExperience.id == research_id).first()
+        if research:
+            for key, value in research_data.items():
+                setattr(research, key, value)
+            session.commit()
+            session.refresh(research)
+        return research
+
+    @staticmethod
+    def delete_research_experience(session: Session, research_id: int) -> bool:
+        """Delete a research experience"""
+        research = session.query(ResearchExperience).filter(ResearchExperience.id == research_id).first()
+        if research:
+            session.delete(research)
+            session.commit()
+            return True
+        return False
+
+class AcademicCollaborationQueries:
+    @staticmethod
+    def create_academic_collaboration(session: Session, user_id: int, collab_data: Dict[str, Any]) -> AcademicCollaboration:
+        """Create academic collaboration"""
+        collab_data['user_id'] = user_id
+        collaboration = AcademicCollaboration(**collab_data)
+        session.add(collaboration)
+        session.commit()
+        session.refresh(collaboration)
+        return collaboration
+
+    @staticmethod
+    def get_user_academic_collaborations(session: Session, user_id: int) -> List[AcademicCollaboration]:
+        """Get all academic collaborations for a user"""
+        return session.query(AcademicCollaboration).filter(
+            AcademicCollaboration.user_id == user_id
+        ).order_by(AcademicCollaboration.display_order, AcademicCollaboration.created_at.desc()).all()
+
+    @staticmethod
+    def update_academic_collaboration(session: Session, collaboration_id: int, collab_data: Dict[str, Any]) -> Optional[AcademicCollaboration]:
+        """Update academic collaboration information"""
+        collaboration = session.query(AcademicCollaboration).filter(AcademicCollaboration.id == collaboration_id).first()
+        if collaboration:
+            for key, value in collab_data.items():
+                setattr(collaboration, key, value)
+            session.commit()
+            session.refresh(collaboration)
+        return collaboration
+
+    @staticmethod
+    def delete_academic_collaboration(session: Session, collaboration_id: int) -> bool:
+        """Delete an academic collaboration"""
+        collaboration = session.query(AcademicCollaboration).filter(AcademicCollaboration.id == collaboration_id).first()
+        if collaboration:
+            session.delete(collaboration)
+            session.commit()
+            return True
+        return False
+
 class EducationQueries:
     @staticmethod
     def create_education(session: Session, user_id: int, edu_data: Dict[str, Any]) -> Education:
@@ -140,6 +200,27 @@ class EducationQueries:
         return session.query(Education).filter(
             Education.user_id == user_id
         ).order_by(Education.display_order, Education.created_at.desc()).all()
+
+    @staticmethod
+    def update_education(session: Session, education_id: int, edu_data: Dict[str, Any]) -> Optional[Education]:
+        """Update education information"""
+        education = session.query(Education).filter(Education.id == education_id).first()
+        if education:
+            for key, value in edu_data.items():
+                setattr(education, key, value)
+            session.commit()
+            session.refresh(education)
+        return education
+
+    @staticmethod
+    def delete_education(session: Session, education_id: int) -> bool:
+        """Delete an education record"""
+        education = session.query(Education).filter(Education.id == education_id).first()
+        if education:
+            session.delete(education)
+            session.commit()
+            return True
+        return False
 
 class SkillsQueries:
     @staticmethod
@@ -159,6 +240,27 @@ class SkillsQueries:
             TechnicalSkill.user_id == user_id
         ).order_by(TechnicalSkill.display_order, TechnicalSkill.created_at.desc()).all()
 
+    @staticmethod
+    def update_technical_skill(session: Session, skill_id: int, skill_data: Dict[str, Any]) -> Optional[TechnicalSkill]:
+        """Update technical skill information"""
+        skill = session.query(TechnicalSkill).filter(TechnicalSkill.id == skill_id).first()
+        if skill:
+            for key, value in skill_data.items():
+                setattr(skill, key, value)
+            session.commit()
+            session.refresh(skill)
+        return skill
+
+    @staticmethod
+    def delete_technical_skill(session: Session, skill_id: int) -> bool:
+        """Delete a technical skill record"""
+        skill = session.query(TechnicalSkill).filter(TechnicalSkill.id == skill_id).first()
+        if skill:
+            session.delete(skill)
+            session.commit()
+            return True
+        return False
+
 class CertificationQueries:
     @staticmethod
     def create_certification(session: Session, user_id: int, cert_data: Dict[str, Any]) -> Certification:
@@ -169,13 +271,34 @@ class CertificationQueries:
         session.commit()
         session.refresh(certification)
         return certification
-    
+
     @staticmethod
     def get_user_certifications(session: Session, user_id: int) -> List[Certification]:
         """Get all certifications for a user"""
         return session.query(Certification).filter(
             Certification.user_id == user_id
         ).order_by(Certification.display_order, Certification.created_at.desc()).all()
+
+    @staticmethod
+    def update_certification(session: Session, certification_id: int, cert_data: Dict[str, Any]) -> Optional[Certification]:
+        """Update certification information"""
+        certification = session.query(Certification).filter(Certification.id == certification_id).first()
+        if certification:
+            for key, value in cert_data.items():
+                setattr(certification, key, value)
+            session.commit()
+            session.refresh(certification)
+        return certification
+
+    @staticmethod
+    def delete_certification(session: Session, certification_id: int) -> bool:
+        """Delete a certification record"""
+        certification = session.query(Certification).filter(Certification.id == certification_id).first()
+        if certification:
+            session.delete(certification)
+            session.commit()
+            return True
+        return False
 
 class SummaryQueries:
     @staticmethod

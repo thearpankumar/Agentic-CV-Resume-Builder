@@ -25,6 +25,7 @@ class User(Base):
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
     professional_experience = relationship("ProfessionalExperience", back_populates="user", cascade="all, delete-orphan")
     research_experience = relationship("ResearchExperience", back_populates="user", cascade="all, delete-orphan")
+    academic_collaborations = relationship("AcademicCollaboration", back_populates="user", cascade="all, delete-orphan")
     education = relationship("Education", back_populates="user", cascade="all, delete-orphan")
     technical_skills = relationship("TechnicalSkill", back_populates="user", cascade="all, delete-orphan")
     certifications = relationship("Certification", back_populates="user", cascade="all, delete-orphan")
@@ -82,9 +83,30 @@ class ResearchExperience(Base):
     # Relationships
     user = relationship("User", back_populates="research_experience")
 
+class AcademicCollaboration(Base):
+    __tablename__ = "academic_collaborations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    project_title = Column(String(255), nullable=False)
+    collaboration_type = Column(String(100))  # Research, Publication, Conference, Workshop
+    institution = Column(String(255))
+    collaborators = Column(Text)  # Names of collaborators
+    role = Column(String(255))  # User's role in the collaboration
+    description = Column(Text)
+    start_date = Column(String(50))
+    end_date = Column(String(50))
+    publication_url = Column(String(255))
+    display_order = Column(Integer, default=0)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="academic_collaborations")
+
 class Education(Base):
     __tablename__ = "education"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     degree = Column(String(255), nullable=False)
@@ -94,7 +116,7 @@ class Education(Base):
     display_order = Column(Integer, default=0)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    
+
     # Relationships
     user = relationship("User", back_populates="education")
 

@@ -188,5 +188,44 @@ class DataValidator:
         for cmd in dangerous_commands:
             if cmd in latex_code:
                 errors.append(f"Potentially dangerous command found: {cmd}")
-        
+
+        return len(errors) == 0, errors
+
+    @staticmethod
+    def validate_academic_collaboration_data(collab_data: Dict[str, Any]) -> Tuple[bool, List[str]]:
+        """Validate academic collaboration data"""
+        errors = []
+
+        # Required fields
+        if not collab_data.get('project_title', '').strip():
+            errors.append("Project title is required")
+
+        # Optional but validated fields
+        if collab_data.get('publication_url'):
+            if not DataValidator.validate_url(collab_data['publication_url']):
+                errors.append("Invalid publication URL format")
+
+        # Text length validation
+        max_lengths = {
+            'project_title': 255,
+            'collaboration_type': 100,
+            'institution': 255,
+            'role': 255,
+            'collaborators': 1000,
+            'description': 2000,
+            'start_date': 50,
+            'end_date': 50,
+            'publication_url': 255
+        }
+
+        for field, max_length in max_lengths.items():
+            value = collab_data.get(field, '')
+            if value and len(value) > max_length:
+                errors.append(f"{field.replace('_', ' ').title()} must be less than {max_length} characters")
+
+        # Validate collaboration type
+        valid_types = ['Research', 'Publication', 'Conference', 'Workshop', 'Grant', 'Other']
+        if collab_data.get('collaboration_type') and collab_data['collaboration_type'] not in valid_types:
+            errors.append(f"Collaboration type must be one of: {', '.join(valid_types)}")
+
         return len(errors) == 0, errors
