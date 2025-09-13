@@ -1288,28 +1288,19 @@ def authenticate_user_simple(email: str, password: str):
     try:
         import psycopg2
         from utils.auth import verify_password
-        from config.settings import settings
         
-        # Use database URL from settings
-        conn = psycopg2.connect(settings.database_url)
+        # Use SQLAlchemy instead of raw SQL
+        session = next(get_db_session())
+        user = UserQueries.get_user_by_email(session, email)
         
-        cur = conn.cursor()
-        cur.execute("SELECT id, name, email, password_hash FROM users WHERE email = %s", (email,))
-        result = cur.fetchone()
-        
-        if result:
-            user_id, name, user_email, password_hash = result
-            if password_hash and verify_password(password, password_hash):
-                cur.close()
-                conn.close()
+        if user and user.password_hash:
+            if verify_password(password, user.password_hash):
                 return type('User', (), {
-                    'id': user_id, 
-                    'name': name or 'User', 
-                    'email': user_email
+                    'id': user.id, 
+                    'name': user.name or 'User', 
+                    'email': user.email
                 })()
         
-        cur.close()
-        conn.close()
         return None
         
     except Exception as e:

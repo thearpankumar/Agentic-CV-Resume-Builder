@@ -1,19 +1,17 @@
-import hashlib
-import secrets
+import bcrypt
 import streamlit as st
 
 def hash_password(password: str) -> str:
-    """Hash password using SHA-256 with salt"""
-    salt = secrets.token_hex(16)
-    password_hash = hashlib.sha256((password + salt).encode()).hexdigest()
-    return f"{salt}:{password_hash}"
+    """Hash password using bcrypt (secure)"""
+    salt = bcrypt.gensalt()
+    password_hash = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return password_hash.decode('utf-8')
 
 def verify_password(password: str, stored_hash: str) -> bool:
-    """Verify password against stored hash"""
+    """Verify password against bcrypt hash"""
     try:
-        salt, password_hash = stored_hash.split(':')
-        return hashlib.sha256((password + salt).encode()).hexdigest() == password_hash
-    except:
+        return bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8'))
+    except Exception:
         return False
 
 def show_password_dialog(title: str, is_new_user: bool = False) -> tuple[str, bool]:
