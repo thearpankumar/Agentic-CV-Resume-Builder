@@ -11,14 +11,6 @@ def render_pdf_preview(force_update: bool = False):
         force_update: If True, force regeneration of PDF
     """
     
-    # Debug info (can be expanded if needed)
-    with st.expander("🔧 Debug Info", expanded=False):
-        st.write(f"PDF Path: {st.session_state.get('pdf_path', 'None')}")
-        st.write(f"PDF Exists: {os.path.exists(st.session_state.pdf_path) if st.session_state.get('pdf_path') else 'N/A'}")
-        st.write(f"LaTeX Code Length: {len(st.session_state.get('latex_code', ''))}")
-        st.write(f"Current User ID: {st.session_state.get('current_user_id', 'None')}")
-        st.write(f"Template Style: {st.session_state.get('template_style', 'None')}")
-        st.write(f"Session ID: {st.session_state.get('session_id', 'None')}")
     
     # Auto-compile if enabled and data exists
     auto_update = st.session_state.get('auto_update_pdf', True)
@@ -79,7 +71,8 @@ def render_pdf_display():
         <style>
         .pdf-browser-container {{
             width: 100%;
-            height: 850px;
+            height: 90vh;
+            max-height: 1200px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
             overflow: hidden;
@@ -150,7 +143,8 @@ def render_pdf_placeholder():
     <style>
     .pdf-placeholder-container {
         width: 100%;
-        height: 600px;
+        height: 90vh;
+        max-height: 1200px;
         border: 1px solid #d1d5db;
         border-radius: 8px;
         overflow: hidden;
@@ -212,9 +206,6 @@ def compile_pdf_from_latex():
         if pdf_path:
             st.session_state.pdf_path = pdf_path
             st.session_state.pdf_generator = pdf_generator  # Keep reference to prevent cleanup
-            # Debug info
-            print(f"PDF generated and stored at: {pdf_path}")
-            print(f"File exists check: {os.path.exists(pdf_path)}")
         else:
             st.error("❌ PDF generation failed")
 
@@ -233,19 +224,19 @@ def generate_pdf_from_user_data():
             )
             
             # Fetch user data from database
-            session = get_db_session()
+            session = next(get_db_session())
             user_id = st.session_state.current_user_id
             
             # Get all user data
             user_data = {
                 'user': UserQueries.get_user_by_id(session, user_id),
-                'projects': ProjectQueries.get_projects_by_user(session, user_id),
-                'professional_experience': ExperienceQueries.get_experience_by_user(session, user_id, 'professional'),
-                'research_experience': ExperienceQueries.get_experience_by_user(session, user_id, 'research'),
-                'education': EducationQueries.get_education_by_user(session, user_id),
-                'technical_skills': SkillsQueries.get_skills_by_user(session, user_id),
-                'certifications': CertificationQueries.get_certifications_by_user(session, user_id),
-                'professional_summaries': SummaryQueries.get_summaries_by_user(session, user_id)
+                'projects': ProjectQueries.get_user_projects(session, user_id),
+                'professional_experience': ExperienceQueries.get_professional_experience(session, user_id),
+                'research_experience': ExperienceQueries.get_research_experience(session, user_id),
+                'education': EducationQueries.get_user_education(session, user_id),
+                'technical_skills': SkillsQueries.get_user_skills(session, user_id),
+                'certifications': CertificationQueries.get_user_certifications(session, user_id),
+                'professional_summaries': SummaryQueries.get_user_summaries(session, user_id)
             }
             
             # Convert database objects to dictionaries
@@ -429,9 +420,6 @@ def generate_sample_pdf():
             st.session_state.pdf_path = pdf_path
             st.session_state.latex_code = latex_code
             st.session_state.pdf_generator = pdf_generator  # Keep reference
-            # Debug info
-            print(f"Sample PDF generated and stored at: {pdf_path}")
-            print(f"File exists check: {os.path.exists(pdf_path)}")
             return True
         else:
             st.error("❌ Failed to generate sample PDF")

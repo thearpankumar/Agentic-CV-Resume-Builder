@@ -143,7 +143,7 @@ def render_projects_section_with_ai() -> bool:
                             st.rerun()
     
     # Add new project form
-    with st.expander("➕ Add New Project", expanded=False):
+    with st.expander("Add New Project", expanded=False):
         data_changed |= render_add_project_form()
     
     return data_changed
@@ -175,7 +175,7 @@ def render_professional_experience_section_with_ai() -> bool:
                         st.session_state[f'editing_exp_{i}'] = True
     
     # Add new experience form
-    with st.expander("➕ Add Professional Experience", expanded=False):
+    with st.expander("Add Professional Experience", expanded=False):
         data_changed |= render_add_professional_experience_form()
     
     return data_changed

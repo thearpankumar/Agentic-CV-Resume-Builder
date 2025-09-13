@@ -46,24 +46,40 @@ class GroqClient:
             # Create prompt
             prompt = self._create_summary_prompt(context, job_description)
             
-            # Call Groq API
-            response = self.client.chat.completions.create(
-                model=self.config.get("model", "openai/gpt-oss-120b"),
-                max_tokens=self.config.get("max_tokens", 2000),
-                temperature=self.config.get("temperature", 0.7),
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a professional resume writer with expertise in creating compelling professional summaries. Create concise, impactful summaries that highlight key strengths and align with job requirements."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
-            )
-            
-            return response.choices[0].message.content.strip()
+            # Call Groq API with retries for word count compliance
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                response = self.client.chat.completions.create(
+                    model=self.config.get("model", "openai/gpt-oss-120b"),
+                    max_tokens=self.config.get("max_tokens", 2000),
+                    temperature=self.config.get("temperature", 0.7),
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a professional resume writer with expertise in creating compelling professional summaries. Create concise, impactful summaries that highlight key strengths and align with job requirements. ALWAYS follow the exact word count requirements."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ]
+                )
+
+                generated_summary = response.choices[0].message.content.strip()
+                word_count = len(generated_summary.split())
+
+                # Validate word count (80-90 words)
+                if 80 <= word_count <= 90:
+                    return generated_summary
+                elif attempt < max_attempts - 1:
+                    # Modify prompt for retry
+                    if word_count < 80:
+                        prompt = prompt.replace("EXACTLY 80-90 words", f"EXACTLY 80-90 words (current draft was {word_count} words - ADD more content)")
+                    else:
+                        prompt = prompt.replace("EXACTLY 80-90 words", f"EXACTLY 80-90 words (current draft was {word_count} words - REDUCE content)")
+
+            # If all attempts failed, return the last attempt
+            return generated_summary
             
         except Exception as e:
             st.error(f"Error generating professional summary: {e}")
@@ -243,24 +259,41 @@ class GroqClient:
             prompt = self._create_iterative_summary_prompt(
                 context, job_description, previous_summary, user_feedback
             )
-            
-            response = self.client.chat.completions.create(
-                model=self.config.get("model", "openai/gpt-oss-120b"),
-                max_tokens=self.config.get("max_tokens", 2000),
-                temperature=self.config.get("temperature", 0.7),
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a professional resume writer. Create compelling professional summaries that can be iteratively improved based on user feedback."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
-            )
-            
-            return response.choices[0].message.content.strip()
+
+            # Call Groq API with retries for word count compliance
+            max_attempts = 3
+            for attempt in range(max_attempts):
+                response = self.client.chat.completions.create(
+                    model=self.config.get("model", "openai/gpt-oss-120b"),
+                    max_tokens=self.config.get("max_tokens", 2000),
+                    temperature=self.config.get("temperature", 0.7),
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a professional resume writer. Create compelling professional summaries that can be iteratively improved based on user feedback. ALWAYS follow the exact word count requirements."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ]
+                )
+
+                generated_summary = response.choices[0].message.content.strip()
+                word_count = len(generated_summary.split())
+
+                # Validate word count (80-90 words)
+                if 80 <= word_count <= 90:
+                    return generated_summary
+                elif attempt < max_attempts - 1:
+                    # Modify prompt for retry
+                    if word_count < 80:
+                        prompt = prompt.replace("EXACTLY 80-90 words", f"EXACTLY 80-90 words (current draft was {word_count} words - ADD more content)")
+                    else:
+                        prompt = prompt.replace("EXACTLY 80-90 words", f"EXACTLY 80-90 words (current draft was {word_count} words - REDUCE content)")
+
+            # If all attempts failed, return the last attempt
+            return generated_summary
             
         except Exception as e:
             st.error(f"Error generating professional summary: {e}")
@@ -393,6 +426,7 @@ Please tailor the summary to align with this specific role.
         
         prompt += """
 Requirements:
+- EXACTLY 80-90 words (this is mandatory)
 - 2-3 sentences maximum
 - Highlight key strengths and expertise
 - Use action-oriented language
@@ -557,6 +591,7 @@ Please improve the summary based on the feedback while maintaining alignment wit
         
         prompt += """
 Requirements:
+- EXACTLY 80-90 words (this is mandatory)
 - 2-3 sentences maximum
 - Highlight key strengths relevant to the job
 - Use action-oriented language

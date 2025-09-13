@@ -149,24 +149,36 @@ class InteractiveSectionManager:
 
         col1, col2 = st.columns(2)
 
+        # Get AI filtered sections
+        ai_filtered_sections = st.session_state.get('ai_filtered_sections', {})
+
         with col1:
             st.write("**Sidebar Sections:**")
             for section in st.session_state.sidebar_sections:
                 section_name = self.available_sections.get(section, section)
                 count = content_counts.get(section, 0)
+                ai_relevant = ai_filtered_sections.get(section, True)
 
-                # Show content count and status
+                # Show content count and AI status
                 label = f"{section_name}"
                 if count > 0:
                     label += f" ({count} items)"
                 else:
                     label += " (no content)"
 
+                if not ai_relevant:
+                    label += " ❌"
+
+                # Disable if no content or AI excluded
+                disabled = count == 0
+                checkbox_value = st.session_state.active_sections.get(section, True) and ai_relevant
+
                 active_sections[section] = st.checkbox(
                     label,
-                    value=st.session_state.active_sections.get(section, True),
+                    value=checkbox_value,
                     key=f"toggle_{section}",
-                    disabled=count == 0  # Disable if no content
+                    disabled=disabled,
+                    help="AI excluded this section for this job posting" if not ai_relevant else None
                 )
 
         with col2:
@@ -174,6 +186,7 @@ class InteractiveSectionManager:
             for section in st.session_state.main_sections:
                 section_name = self.available_sections.get(section, section)
                 count = content_counts.get(section, 0)
+                ai_relevant = ai_filtered_sections.get(section, True)
 
                 label = f"{section_name}"
                 if count > 0:
@@ -181,11 +194,19 @@ class InteractiveSectionManager:
                 else:
                     label += " (no content)"
 
+                if not ai_relevant:
+                    label += " ❌"
+
+                # Disable if no content
+                disabled = count == 0
+                checkbox_value = st.session_state.active_sections.get(section, True) and ai_relevant
+
                 active_sections[section] = st.checkbox(
                     label,
-                    value=st.session_state.active_sections.get(section, True),
+                    value=checkbox_value,
                     key=f"toggle_{section}",
-                    disabled=count == 0
+                    disabled=disabled,
+                    help="AI excluded this section for this job posting" if not ai_relevant else None
                 )
 
         # Update session state
@@ -273,6 +294,9 @@ class InteractiveSectionManager:
             else:
                 st.session_state.active_sections = {}
 
+        # Get AI filtered sections
+        ai_filtered_sections = st.session_state.get('ai_filtered_sections', {})
+
         col1, col2 = st.columns([0.3, 0.7])
 
         with col1:
@@ -280,20 +304,38 @@ class InteractiveSectionManager:
             for section in st.session_state.sidebar_sections:
                 section_name = self.available_sections.get(section, section)
                 active = st.session_state.active_sections.get(section, True)
-                if active:
+                ai_relevant = ai_filtered_sections.get(section, True)  # Default to True if no AI analysis
+
+                if active and ai_relevant:
                     st.info(f"✅ {section_name}")
-                else:
+                elif active and not ai_relevant:
                     st.warning(f"❌ {section_name}")
+                elif not active:
+                    st.error(f"❌ {section_name} (disabled)")
+                else:
+                    st.error(f"❌ {section_name}")
 
         with col2:
             st.markdown("**Main Content (70%)**")
             for section in st.session_state.main_sections:
                 section_name = self.available_sections.get(section, section)
                 active = st.session_state.active_sections.get(section, True)
-                if active:
+                ai_relevant = ai_filtered_sections.get(section, True)
+
+                if active and ai_relevant:
                     st.success(f"✅ {section_name}")
+                elif active and not ai_relevant:
+                    st.warning(f"❌ {section_name}")
+                elif not active:
+                    st.error(f"❌ {section_name} (disabled)")
                 else:
                     st.error(f"❌ {section_name}")
+
+        # Show AI exclusion summary if available
+        if ai_filtered_sections:
+            excluded_count = sum(1 for relevant in ai_filtered_sections.values() if not relevant)
+            if excluded_count > 0:
+                st.info(f"🤖 AI Analysis: {excluded_count} section(s) excluded for this job posting")
 
         # Reset button
         if st.button("🔄 Reset to Default Layout", key="reset_layout"):

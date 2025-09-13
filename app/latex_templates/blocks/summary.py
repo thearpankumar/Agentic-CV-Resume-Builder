@@ -24,21 +24,23 @@ class SummaryBlock:
     def _generate_arpan_summary(self, summary_text: str) -> str:
         """Generate Arpan style summary"""
         summary_parts = []
-        
+
         summary_parts.append("\\section{Professional Summary}")
         summary_parts.append(f"{self._escape_latex(summary_text)}")
+        summary_parts.append("\\vspace{8pt}")
         summary_parts.append("")
-        
+
         return "\n".join(summary_parts)
     
     def _generate_simple_summary(self, summary_text: str) -> str:
         """Generate simple style summary"""
         summary_parts = []
-        
+
         summary_parts.append("\\section{Professional Summary}")
         summary_parts.append(f"{self._escape_latex(summary_text)}")
+        summary_parts.append("\\vspace{8pt}")
         summary_parts.append("")
-        
+
         return "\n".join(summary_parts)
     
     def _get_default_summary(self) -> str:

@@ -21,26 +21,54 @@ class VisualResumeBuilder:
         Returns: True if layout changed and PDF needs regeneration
         """
         if not user_id:
-            st.warning("⚠️ Please select a user to start building your resume.")
+            st.warning("Please select a user to start building your resume.")
             return False
 
-        st.markdown("# 🎨 Visual Resume Builder")
+        st.markdown("# Visual Resume Builder")
         st.markdown("---")
 
-        # Create tabs for different aspects of resume building
-        tab1, tab2, tab3 = st.tabs(["📋 Layout Designer", "🤖 AI Optimizer", "🎯 Content Manager"])
+        # Create single tab for integrated experience
+        tab1 = st.tabs(["Resume Builder"])[0]
 
         layout_changed = False
 
         try:
             with tab1:
-                layout_changed = self._render_layout_designer(user_id)
-
-            with tab2:
+                # Render AI Optimizer first (job posting and optimization)
                 self._render_ai_optimizer(user_id)
 
-            with tab3:
-                self._render_content_manager(user_id)
+                st.markdown("---")
+
+                # Then render Layout Designer
+                layout_changed = self._render_layout_designer(user_id)
+
+                # Generate PDF section at the bottom
+                st.markdown("---")
+
+                # Informational message
+                if not st.session_state.get('ai_optimized_data'):
+                    st.info("**Tip:** Run AI optimization above to get a tailored resume with selected projects and optimized content!")
+                else:
+                    st.success("Your resume will include optimized content and selected projects.")
+
+                # Generate PDF button
+                col1, col2, col3 = st.columns([1, 1, 1])
+
+                with col2:
+                    if st.button("Generate Resume PDF", key="generate_visual_pdf", use_container_width=True):
+                        with st.spinner("Generating your personalized resume..."):
+                            pdf_path = self.generate_optimized_pdf(user_id)
+
+                            if pdf_path:
+                                st.success("Resume generated successfully!")
+                                st.session_state.pdf_path = pdf_path
+                            else:
+                                st.error("❌ Failed to generate PDF. Please check your content and try again.")
+
+                # Show PDF preview full width (outside column layout)
+                if st.session_state.get('pdf_path'):
+                    st.markdown("---")
+                    self._render_pdf_preview()
 
         except Exception as e:
             st.error(f"Error in Visual Builder: {e}")
@@ -52,28 +80,18 @@ class VisualResumeBuilder:
 
     def _render_layout_designer(self, user_id: int) -> bool:
         """Render the layout designer with drag-drop functionality"""
-        st.header("📋 Layout Designer")
-        st.write("Design your resume layout by dragging sections between sidebar and main content areas.")
-
         layout_changed = False
 
-        # Section organization interface
-        col1, col2 = st.columns([2, 1])
+        # Section organization interface - full width
+        # Main drag-drop interface
+        old_sidebar = st.session_state.get('sidebar_sections', []).copy()
+        old_main = st.session_state.get('main_sections', []).copy()
 
-        with col1:
-            # Main drag-drop interface
-            old_sidebar = st.session_state.get('sidebar_sections', []).copy()
-            old_main = st.session_state.get('main_sections', []).copy()
+        sidebar_sections, main_sections = self.section_manager.render_section_organizer(user_id)
 
-            sidebar_sections, main_sections = self.section_manager.render_section_organizer(user_id)
-
-            # Check if layout changed
-            if (sidebar_sections != old_sidebar or main_sections != old_main):
-                layout_changed = True
-
-        with col2:
-            # Layout preview and controls
-            self.section_manager.render_layout_preview()
+        # Check if layout changed
+        if (sidebar_sections != old_sidebar or main_sections != old_main):
+            layout_changed = True
 
         st.markdown("---")
 
@@ -98,38 +116,18 @@ class VisualResumeBuilder:
             key="ai_job_description"
         )
 
-        if job_description and st.button("🚀 Optimize Content for Job", key="optimize_content"):
+        if job_description and st.button("Optimize Content for Job", key="optimize_content"):
             self._run_ai_optimization(user_id, job_description)
 
         # Display current AI recommendations if available
         self._display_ai_recommendations(user_id)
 
-    def _render_content_manager(self, user_id: int):
-        """Render content management interface"""
-        st.header("🎯 Content Manager")
-        st.write("Review and manage the content that will appear in your resume.")
-
-        try:
-            session = next(get_db_session())
-            user_data = UserQueries.get_user_with_all_data(session, user_id)
-
-            if not user_data:
-                st.error("Could not load user data.")
-                return
-
-            # Get current section organization
-            sidebar_sections, main_sections, active_sections = self.section_manager.get_organized_sections()
-
-            # Display content for each active section
-            self._render_section_content_preview(user_data, sidebar_sections + main_sections, active_sections)
-
-        except Exception as e:
-            st.error(f"Error loading content: {e}")
 
     def _render_template_selector(self):
         """Render template style selector"""
-        st.subheader("🎨 Template Settings")
+        st.subheader("Template Settings")
 
+        # Full width template settings
         col1, col2 = st.columns(2)
 
         with col1:
@@ -144,6 +142,7 @@ class VisualResumeBuilder:
                 st.session_state.template_style = template_style
                 st.rerun()
 
+        with col2:
             # Font size selector
             font_size = st.selectbox(
                 "Font size:",
@@ -156,17 +155,6 @@ class VisualResumeBuilder:
             if font_size != st.session_state.get('font_size', '10pt'):
                 st.session_state.font_size = font_size
 
-        with col2:
-            # Template preview info
-            if template_style == "arpan":
-                st.info("🏛️ **Arpan Style**: Professional two-column layout with sidebar for skills and main content for experience.")
-            else:
-                st.info("📄 **Simple Style**: Clean single-column layout suitable for traditional formats.")
-
-            # Font size info
-            font_size_current = st.session_state.get('font_size', '10pt')
-            st.info(f"📝 **Font Size**: {font_size_current} - Headings are medium size (fixed)")
-
     def _run_ai_optimization(self, user_id: int, job_description: str):
         """Run AI optimization and update session state"""
         try:
@@ -177,7 +165,7 @@ class VisualResumeBuilder:
                 st.error("Could not load user data for optimization.")
                 return
 
-            with st.spinner("🤖 AI is analyzing and optimizing your content..."):
+            with st.spinner("AI is analyzing and optimizing your content..."):
                 # Run optimization
                 optimized_data = self.content_optimizer.optimize_resume_for_job(
                     user_data, job_description, user_id
@@ -200,7 +188,7 @@ class VisualResumeBuilder:
                     # Update active sections based on AI analysis
                     st.session_state.ai_filtered_sections = section_relevance
 
-                st.success("✅ AI optimization completed!")
+                st.success("AI optimization completed!")
 
         except Exception as e:
             st.error(f"Error during AI optimization: {e}")
@@ -208,10 +196,10 @@ class VisualResumeBuilder:
     def _display_ai_recommendations(self, user_id: int):
         """Display AI recommendations and allow user to apply them"""
         if 'ai_optimized_data' not in st.session_state:
-            st.info("💡 Run AI optimization to see personalized recommendations.")
+            st.info("Run AI optimization to see personalized recommendations.")
             return
 
-        st.subheader("🎯 AI Recommendations")
+        st.subheader("AI Recommendations")
 
         # Show optimization summary
         optimized_data = st.session_state.ai_optimized_data
@@ -235,14 +223,14 @@ class VisualResumeBuilder:
             included_sections = [section.replace('_', ' ').title() for section, relevant in section_relevance.items() if relevant]
 
             if excluded_sections:
-                with st.expander("🚫 Excluded Sections", expanded=False):
+                with st.expander("Excluded Sections", expanded=False):
                     st.write("**The following sections were excluded as not relevant for this job:**")
                     for section in excluded_sections:
                         st.write(f"• {section}")
                     st.info("These sections won't appear in the optimized resume to keep it focused and relevant.")
 
             if included_sections:
-                with st.expander("✅ Included Sections", expanded=False):
+                with st.expander("Included Sections", expanded=False):
                     st.write("**The following sections are relevant for this job:**")
                     for section in included_sections:
                         st.write(f"• {section}")
@@ -250,7 +238,7 @@ class VisualResumeBuilder:
         # Project recommendations
         projects = optimized_data.get('projects', [])
         if projects and isinstance(projects, list):
-            with st.expander("📊 Selected Projects", expanded=True):
+            with st.expander("Selected Projects", expanded=False):
                 for i, project in enumerate(projects, 1):
                     if isinstance(project, dict):
                         st.write(f"**{i}. {project.get('title', 'Untitled Project')}**")
@@ -262,7 +250,7 @@ class VisualResumeBuilder:
         # Professional summary
         summaries = optimized_data.get('professional_summaries', [])
         if summaries and isinstance(summaries, list) and len(summaries) > 0:
-            with st.expander("📝 Generated Summary", expanded=True):
+            with st.expander("Generated Summary", expanded=False):
                 summary_item = summaries[0]
                 if isinstance(summary_item, dict):
                     summary = summary_item.get('generated_summary', 'No summary available')
@@ -283,101 +271,11 @@ class VisualResumeBuilder:
                 st.metric("Excluded", excluded_count, delta=f"-{excluded_count}" if excluded_count > 0 else "0")
 
         # Regenerate button
-        if st.button("🔄 Generate New Optimization", key="regenerate_optimization"):
+        if st.button("Generate New Optimization", key="regenerate_optimization"):
             if st.session_state.get('ai_job_description_stored'):
                 self._run_ai_optimization(user_id, st.session_state.ai_job_description_stored)
 
 
-    def _render_section_content_preview(self, user_data: Dict[str, Any], sections: List[str], active_sections: Dict[str, bool]):
-        """Render preview of content for each section"""
-        for section in sections:
-            if not active_sections.get(section, False):
-                continue
-
-            section_name = self.section_manager.available_sections.get(section, section)
-            section_data = user_data.get(section, [])
-
-            # Ensure section_data is a list
-            if not isinstance(section_data, list):
-                st.error(f"Invalid data format for section '{section_name}': expected list, got {type(section_data)}")
-                continue
-
-            with st.expander(f"📋 {section_name} ({len(section_data)} items)", expanded=False):
-                if not section_data:
-                    st.info("No content available for this section.")
-                    continue
-
-                # Display section content based on type
-                self._display_section_content(section, section_data)
-
-    def _display_section_content(self, section: str, data: List[Dict[str, Any]]):
-        """Display content for a specific section"""
-        if section == "projects":
-            for i, project in enumerate(data, 1):
-                if not isinstance(project, dict):
-                    st.warning(f"Project {i}: Invalid data format")
-                    continue
-                st.write(f"**{i}. {project.get('title', 'Untitled')}**")
-                st.write(f"*{project.get('start_date', '')} - {project.get('end_date', '')}*")
-                if project.get('technologies'):
-                    st.write(f"**Technologies:** {project['technologies']}")
-                if project.get('description'):
-                    st.write(project['description'])
-                st.markdown("---")
-
-        elif section in ["professional_experience", "research_experience"]:
-            for i, exp in enumerate(data, 1):
-                if not isinstance(exp, dict):
-                    st.warning(f"Experience {i}: Invalid data format")
-                    continue
-                if section == "professional_experience":
-                    st.write(f"**{i}. {exp.get('position', 'Position')} at {exp.get('company', 'Company')}**")
-                else:
-                    st.write(f"**{i}. {exp.get('title', 'Research Title')}**")
-                st.write(f"*{exp.get('start_date', '')} - {exp.get('end_date', '')}*")
-                if exp.get('description'):
-                    st.write(exp['description'])
-                st.markdown("---")
-
-        elif section == "education":
-            for i, edu in enumerate(data, 1):
-                if not isinstance(edu, dict):
-                    st.warning(f"Education {i}: Invalid data format")
-                    continue
-                st.write(f"**{i}. {edu.get('degree', 'Degree')}**")
-                st.write(f"*{edu.get('institution', 'Institution')} - {edu.get('graduation_date', '')}*")
-                if edu.get('gpa_percentage'):
-                    st.write(f"**GPA:** {edu['gpa_percentage']}")
-                st.markdown("---")
-
-        elif section == "technical_skills":
-            for i, skill in enumerate(data, 1):
-                if not isinstance(skill, dict):
-                    st.warning(f"Skill {i}: Invalid data format")
-                    continue
-                st.write(f"**{skill.get('category', 'Category')}:**")
-                st.write(skill.get('skills', 'No skills listed'))
-                st.markdown("---")
-
-        elif section == "certifications":
-            for i, cert in enumerate(data, 1):
-                if not isinstance(cert, dict):
-                    st.warning(f"Certification {i}: Invalid data format")
-                    continue
-                st.write(f"**{i}. {cert.get('title', 'Certification')}**")
-                st.write(f"*{cert.get('issuer', 'Issuer')} - {cert.get('date_obtained', '')}*")
-                st.markdown("---")
-
-        elif section == "professional_summaries":
-            for i, summary in enumerate(data, 1):
-                if not isinstance(summary, dict):
-                    st.warning(f"Summary {i}: Invalid data format")
-                    continue
-                st.write(f"**Summary {i}:**")
-                st.write(summary.get('generated_summary', 'No summary available'))
-                if summary.get('job_description'):
-                    st.write(f"*Optimized for:* {summary['job_description'][:100]}...")
-                st.markdown("---")
 
     def generate_optimized_pdf(self, user_id: int) -> Optional[str]:
         """Generate PDF with current visual configuration"""
@@ -392,16 +290,11 @@ class VisualResumeBuilder:
             # Use AI-optimized data if available, otherwise use original database data
             ai_optimized_data = st.session_state.get('ai_optimized_data')
             if ai_optimized_data and isinstance(ai_optimized_data, dict):
-                # Debug: Show what AI data contains
-                original_project_count = len(user_data.get('projects', []))
-                ai_project_count = len(ai_optimized_data.get('projects', []))
-                st.info(f"🤖 Using AI-optimized data: {original_project_count} → {ai_project_count} projects")
-                st.info("📝 Professional experience uses original content (not AI-modified)")
 
                 # Merge AI optimized content with original data
                 user_data = self._merge_ai_optimized_data(user_data, ai_optimized_data)
             else:
-                st.info("📄 Using original database data (no AI optimization applied)")
+                pass  # Use original data without notification
 
             # Get current section organization
             sidebar_sections, main_sections, active_sections = self.section_manager.get_organized_sections()
@@ -462,6 +355,13 @@ class VisualResumeBuilder:
             if section in ai_data and ai_data[section]:
                 # Use AI-optimized content for this section
                 merged_data[section] = ai_data[section]
-                print(f"Using AI-optimized data for {section}: {len(ai_data[section])} items")
 
         return merged_data
+
+    def _render_pdf_preview(self):
+        """Render PDF preview if available"""
+        try:
+            from components.pdf_preview import render_pdf_preview
+            render_pdf_preview(force_update=True)
+        except ImportError:
+            st.info("PDF preview will be shown in the LaTeX Editor tab.")

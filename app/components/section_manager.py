@@ -23,7 +23,7 @@ def render_section_manager() -> bool:
     }
     
     # AI Optimization Section
-    with st.expander("🤖 AI Resume Optimization", expanded=False):
+    with st.expander("AI Resume Optimization", expanded=False):
         sections_changed |= render_ai_optimization_panel()
     
     # Section visibility management
@@ -42,14 +42,14 @@ def render_section_manager() -> bool:
         if new_active_sections != st.session_state.active_sections:
             st.session_state.active_sections = new_active_sections
             sections_changed = True
-            st.success("✅ Active sections updated!")
+            st.success("Active sections updated!")
     
     # Section ordering
     with st.expander("📋 Section Order", expanded=False):
         render_section_ordering(available_sections)
     
     # Template style selection
-    with st.expander("🎨 Template Style", expanded=False):
+    with st.expander("Template Style", expanded=False):
         new_template = st.radio(
             "Choose template style:",
             ["arpan", "simple"],
@@ -60,7 +60,7 @@ def render_section_manager() -> bool:
         if new_template != st.session_state.template_style:
             st.session_state.template_style = new_template
             sections_changed = True
-            st.success(f"✅ Template changed to {new_template.title()} style!")
+            st.success(f"Template changed to {new_template.title()} style!")
     
     return sections_changed
 
@@ -68,7 +68,7 @@ def render_ai_optimization_panel() -> bool:
     """Render AI optimization controls"""
     optimization_changed = False
     
-    st.write("**🎯 Optimize your resume for a specific job:**")
+    st.write("**Optimize your resume for a specific job:**")
     
     # Job description input
     job_description = st.text_area(
@@ -82,11 +82,11 @@ def render_ai_optimization_panel() -> bool:
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🚀 Optimize Resume", key="optimize_resume"):
+            if st.button("Optimize Resume", key="optimize_resume"):
                 optimization_changed |= optimize_resume_for_job(job_description)
         
         with col2:
-            if st.button("📊 Analyze Fit", key="analyze_fit"):
+            if st.button("Analyze Fit", key="analyze_fit"):
                 show_job_fit_analysis(job_description)
         
         # Quick optimizations
@@ -99,11 +99,11 @@ def render_ai_optimization_panel() -> bool:
                 optimization_changed |= generate_summary_only(job_description)
         
         with col2:
-            if st.button("🎯 Select Projects", key="select_projects"):
+            if st.button("Select Projects", key="select_projects"):
                 optimization_changed |= optimize_projects_only(job_description)
         
         with col3:
-            if st.button("💡 Get Suggestions", key="get_suggestions"):
+            if st.button("Get Suggestions", key="get_suggestions"):
                 show_optimization_suggestions(job_description)
     
     elif not st.session_state.current_user_id:

@@ -48,7 +48,7 @@ class HeaderBlock:
         header_parts.append("    \\vspace{4pt}")
         header_parts.append("    \\noindent\\rule{\\linewidth}{0.8pt}")
         header_parts.append("\\end{center}")
-        header_parts.append("\\vspace{12pt}")
+        header_parts.append("\\vspace{6pt}")
 
         return "\n".join(header_parts)
     

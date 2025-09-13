@@ -20,37 +20,37 @@ def render_sidebar() -> bool:
         st.session_state.current_user_id = None
     
     # User management section
-    st.subheader("👤 User Profile")
+    st.subheader("User Profile")
     data_changed |= render_user_section()
     
     # Only show other sections if user is selected/created
     if st.session_state.current_user_id:
         st.markdown("---")
-        st.subheader("💼 Projects")
+        st.subheader("Projects")
         data_changed |= render_projects_section()
         
         st.markdown("---")
-        st.subheader("🏢 Professional Experience")
+        st.subheader("Professional Experience")
         data_changed |= render_professional_experience_section()
         
         st.markdown("---")
-        st.subheader("🔬 Research Experience")
+        st.subheader("Research Experience")
         data_changed |= render_research_experience_section()
 
         st.markdown("---")
-        st.subheader("🤝 Academic Collaborations")
+        st.subheader("Academic Collaborations")
         data_changed |= render_academic_collaborations_section()
 
         st.markdown("---")
-        st.subheader("🎓 Education")
+        st.subheader("Education")
         data_changed |= render_education_section()
         
         st.markdown("---")
-        st.subheader("⚡ Technical Skills")
+        st.subheader("Technical Skills")
         data_changed |= render_skills_section()
         
         st.markdown("---")
-        st.subheader("🏆 Certifications")
+        st.subheader("Certifications")
         data_changed |= render_certifications_section()
     
     return data_changed
@@ -179,7 +179,7 @@ def render_projects_section() -> bool:
                     
                     col1, col2 = st.columns(2)
                     with col1:
-                        if st.button("✅ Use This Version", key=f"accept_reframe_{i}"):
+                        if st.button("Use This Version", key=f"accept_reframe_{i}"):
                             update_project_description(project['id'], st.session_state[f'reframed_project_{i}'])
                             del st.session_state[f'reframed_project_{i}']
                             st.success("Project updated!")
@@ -360,7 +360,7 @@ def render_professional_experience_section() -> bool:
                     
                     col1, col2 = st.columns(2)
                     with col1:
-                        if st.button("✅ Use This Version", key=f"accept_exp_reframe_{i}"):
+                        if st.button("Use This Version", key=f"accept_exp_reframe_{i}"):
                             update_experience_description(exp['id'], st.session_state[f'reframed_exp_{i}'])
                             del st.session_state[f'reframed_exp_{i}']
                             st.success("Experience updated!")
@@ -581,7 +581,7 @@ def render_research_experience_section() -> bool:
                             st.rerun()
 
     # Add new research experience form
-    with st.expander("➕ Add Research Experience", expanded=False):
+    with st.expander("Add Research Experience", expanded=False):
         # Initialize form counter for unique keys
         if 'research_form_counter' not in st.session_state:
             st.session_state.research_form_counter = 0
@@ -760,7 +760,7 @@ def render_academic_collaborations_section() -> bool:
                             st.rerun()
 
     # Add new academic collaboration form
-    with st.expander("➕ Add Academic Collaboration", expanded=False):
+    with st.expander("Add Academic Collaboration", expanded=False):
         # Initialize form counter for unique keys
         if 'collaboration_form_counter' not in st.session_state:
             st.session_state.collaboration_form_counter = 0
@@ -905,7 +905,7 @@ def render_education_section() -> bool:
                             st.rerun()
 
     # Add new education form
-    with st.expander("➕ Add Education", expanded=False):
+    with st.expander("Add Education", expanded=False):
         # Initialize form counter for unique keys
         if 'education_form_counter' not in st.session_state:
             st.session_state.education_form_counter = 0
@@ -1015,7 +1015,7 @@ def render_skills_section() -> bool:
                             st.rerun()
 
     # Add new skills form
-    with st.expander("➕ Add Technical Skills", expanded=False):
+    with st.expander("Add Technical Skills", expanded=False):
         # Initialize form counter for unique keys
         if 'skills_form_counter' not in st.session_state:
             st.session_state.skills_form_counter = 0
@@ -1127,7 +1127,7 @@ def render_certifications_section() -> bool:
                             st.rerun()
 
     # Add new certification form
-    with st.expander("➕ Add Certification", expanded=False):
+    with st.expander("Add Certification", expanded=False):
         # Initialize form counter for unique keys
         if 'certification_form_counter' not in st.session_state:
             st.session_state.certification_form_counter = 0
@@ -1332,7 +1332,7 @@ def reframe_project_description(project: Dict[str, Any], index: int):
     """Reframe project description using AI"""
     groq_client = GroqClient()
     if groq_client.is_available():
-        with st.spinner("🤖 AI is reframing your project description..."):
+        with st.spinner("AI is reframing your project description..."):
             reframed = groq_client.reframe_content(
                 project.get('description', ''),
                 'project',
@@ -1352,7 +1352,7 @@ def reframe_experience_description(experience: Dict[str, Any], index: int):
     """Reframe experience description using AI"""
     groq_client = GroqClient()
     if groq_client.is_available():
-        with st.spinner("🤖 AI is reframing your experience description..."):
+        with st.spinner("AI is reframing your experience description..."):
             reframed = groq_client.reframe_content(
                 experience.get('description', ''),
                 'professional experience',

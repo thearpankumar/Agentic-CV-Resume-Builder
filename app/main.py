@@ -16,57 +16,167 @@ from ai_integration.groq_client import GroqClient
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="CV Resume Builder",
-    page_icon="📄",
+    page_title="Professional Resume Builder",
+    page_icon="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23333333'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/><polyline points='14,2 14,8 20,8'/></svg>",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling
+# Professional Dark Theme CSS
 st.markdown("""
 <style>
+    /* Root and App Background */
+    .stApp {
+        background-color: #0F0F0F;
+        color: #E8E8E8;
+    }
+
+    /* Main Header */
     .main-header {
         text-align: center;
-        color: #2E8B57;
+        color: #E8E8E8;
         margin-bottom: 2rem;
+        font-weight: 600;
     }
+
+    /* Section Headers */
     .section-header {
-        color: #1E6B4F;
-        border-bottom: 2px solid #2E8B57;
+        color: #E8E8E8;
+        border-bottom: 2px solid #404040;
         padding-bottom: 0.5rem;
         margin-top: 1.5rem;
         margin-bottom: 1rem;
+        font-weight: 500;
     }
+    
+    /* Specific styling for Resume Details header */
+    .resume-details-header {
+        color: #E8E8E8;
+        text-align: center;
+        font-size: 1.2rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+    }
+
+    /* Buttons - Professional Grey Theme */
     .stButton > button {
-        background-color: #2E8B57;
-        color: white;
-        border-radius: 5px;
-        border: none;
+        background-color: #404040;
+        color: #E8E8E8;
+        border-radius: 6px;
+        border: 1px solid #606060;
         padding: 0.5rem 1rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
     }
     .stButton > button:hover {
-        background-color: #1E6B4F;
+        background-color: #505050;
+        border-color: #707070;
+        box-shadow: 0 2px 8px rgba(96, 96, 96, 0.2);
     }
-    .preview-container {
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 1rem;
-        margin-top: 1rem;
-        width: 100%;
+
+    /* Success/Info/Warning Messages */
+    .stSuccess {
+        background-color: #1A2E1A;
+        border: 1px solid #2E5E2E;
+        color: #90EE90;
     }
+    .stInfo {
+        background-color: #1A1A2E;
+        border: 1px solid #2E2E5E;
+        color: #87CEEB;
+    }
+    .stWarning {
+        background-color: #2E2E1A;
+        border: 1px solid #5E5E2E;
+        color: #FFE55C;
+    }
+    .stError {
+        background-color: #2E1A1A;
+        border: 1px solid #5E2E2E;
+        color: #FF6B6B;
+    }
+
+    /* Input Fields and Widgets */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea,
+    .stSelectbox > div > div > select {
+        background-color: #1A1A1A;
+        color: #E8E8E8;
+        border: 1px solid #404040;
+    }
+
+    /* Tabs - Professional Styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
+        background-color: transparent;
     }
     .stTabs [data-baseweb="tab"] {
         height: 50px;
-        padding-left: 20px;
-        padding-right: 20px;
-        background-color: #f0f2f6;
-        border-radius: 5px 5px 0 0;
+        padding: 0 20px;
+        background-color: #1A1A1A;
+        border: 1px solid #404040;
+        border-radius: 6px;
+        color: #B0B0B0;
+        font-weight: 500;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #2E8B57 !important;
-        color: white !important;
+        background-color: #404040 !important;
+        color: #E8E8E8 !important;
+        border-color: #606060 !important;
+    }
+
+    /* Sidebar Styling */
+    .css-1d391kg {
+        background-color: #1A1A1A;
+    }
+
+    /* Professional Navigation Tabs */
+    .sidebar-nav-tabs {
+        margin-bottom: 1rem;
+    }
+    .nav-tab-active {
+        background-color: #404040 !important;
+        color: #E8E8E8 !important;
+        border: 2px solid #606060 !important;
+        font-weight: 600;
+    }
+    .nav-tab-inactive {
+        background-color: #1A1A1A !important;
+        color: #B0B0B0 !important;
+        border: 2px solid #2A2A2A !important;
+        font-weight: 400;
+    }
+
+    /* Preview Container */
+    .preview-container {
+        border: 1px solid #404040;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 1rem;
+        background-color: #1A1A1A;
+        width: 100%;
+    }
+
+    /* Code Editor Styling */
+    .stCodeBlock {
+        background-color: #1A1A1A;
+        border: 1px solid #404040;
+    }
+
+    /* Expanders */
+    .streamlit-expanderHeader {
+        background-color: #1A1A1A;
+        color: #E8E8E8;
+        border: 1px solid #404040;
+    }
+
+    /* Metrics and Stats */
+    .metric-container {
+        background-color: #1A1A1A;
+        padding: 1rem;
+        border-radius: 6px;
+        border: 1px solid #404040;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -107,12 +217,12 @@ def check_database_connection():
     try:
         db_conn = get_db_connection()
         if not db_conn.test_connection():
-            st.error("❌ Database connection failed. Please make sure PostgreSQL is running.")
+            st.error("Database connection failed. Please make sure PostgreSQL is running.")
             st.info("Run: `docker-compose up -d` to start the database")
             return False
         return True
     except Exception as e:
-        st.error(f"❌ Database error: {e}")
+        st.error(f"Database error: {e}")
         return False
 
 def render_visual_builder_tab():
@@ -122,34 +232,15 @@ def render_visual_builder_tab():
         current_user_id = st.session_state.get('current_user_id')
 
         if not current_user_id:
-            st.warning("⚠️ Please select a user in the Details tab first to use the Visual Builder.")
-            st.info("👈 Go to the **Details** tab and select a user to get started.")
+            st.warning("Please select a user in the Details tab first to use the Visual Builder.")
+            st.info("Go to the **Details** tab and select a user to get started.")
             return
 
         # Initialize visual builder
         visual_builder = VisualResumeBuilder()
 
-        # Render the visual builder interface
+        # Render the visual builder interface (now includes PDF generation at the end)
         layout_changed = visual_builder.render_visual_builder(current_user_id)
-
-        # Generate PDF button and preview
-        st.markdown("---")
-        col1, col2, col3 = st.columns([1, 1, 1])
-
-        with col2:
-            if st.button("🚀 Generate Resume PDF", key="generate_visual_pdf", use_container_width=True):
-                with st.spinner("🎨 Generating your personalized resume..."):
-                    pdf_path = visual_builder.generate_optimized_pdf(current_user_id)
-
-                    if pdf_path:
-                        st.success("✅ Resume generated successfully!")
-                        st.session_state.pdf_path = pdf_path
-
-                        # Show PDF preview
-                        st.markdown("### 📄 Generated Resume Preview")
-                        render_pdf_preview(force_update=True)
-                    else:
-                        st.error("❌ Failed to generate PDF. Please check your content and try again.")
 
     except Exception as e:
         st.error(f"Error in Visual Builder: {e}")
@@ -165,7 +256,7 @@ def optimize_resume_for_job(job_description: str):
     
     groq_client = GroqClient()
     if groq_client.is_available():
-        with st.spinner("🤖 AI is optimizing your resume for this job..."):
+        with st.spinner("AI is optimizing your resume for this job..."):
             try:
                 # Gather user data
                 user_data = gather_user_data()
@@ -197,7 +288,7 @@ def main():
     initialize_session_state()
     
     # Header
-    st.markdown("<h1 class='main-header'>🎯 AI-Powered CV Resume Builder</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-header'>AI-Powered CV Resume Builder</h1>", unsafe_allow_html=True)
     
     # Check database connection
     if not check_database_connection():
@@ -205,50 +296,44 @@ def main():
     
     # Check for Groq API key
     if not settings.is_groq_available:
-        st.warning("⚠️ Groq API key not found in settings. Please add it to your .env file for AI features.")
+        st.warning("Groq API key not found in settings. Please add it to your .env file for AI features.")
     
     # Initialize active tab in session state
     if 'active_main_tab' not in st.session_state:
         st.session_state.active_main_tab = 'details'
     
-    # Left sidebar with simple tab selection
+    # Left sidebar with horizontal tab navigation
     with st.sidebar:
-        st.markdown("<h2 class='section-header'>📝 Resume Builder</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 class='section-header'>Resume Builder</h2>", unsafe_allow_html=True)
+
+        # Tab selection buttons - stacked horizontally (one below the other)
+        st.markdown('<div class="sidebar-nav-tabs">', unsafe_allow_html=True)
+
+        # Details tab
+        details_style = "nav-tab-active" if st.session_state.active_main_tab == 'details' else "nav-tab-inactive"
+        if st.button("Details", key="details_tab", use_container_width=True):
+            st.session_state.active_main_tab = 'details'
+            st.rerun()
+
+        # Visual Builder tab
+        visual_style = "nav-tab-active" if st.session_state.active_main_tab == 'visual' else "nav-tab-inactive"
+        if st.button("Visual Builder", key="visual_tab", use_container_width=True):
+            st.session_state.active_main_tab = 'visual'
+            st.rerun()
+
+        # LaTeX Editor tab
+        latex_style = "nav-tab-active" if st.session_state.active_main_tab == 'latex' else "nav-tab-inactive"
+        if st.button("LaTeX Editor", key="latex_tab", use_container_width=True):
+            st.session_state.active_main_tab = 'latex'
+            st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        # Tab selection buttons
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button("📋 Details", key="details_tab", use_container_width=True):
-                st.session_state.active_main_tab = 'details'
-        with col2:
-            if st.button("🎨 Visual Builder", key="visual_tab", use_container_width=True):
-                st.session_state.active_main_tab = 'visual'
-        with col3:
-            if st.button("📝 LaTeX Editor", key="latex_tab", use_container_width=True):
-                st.session_state.active_main_tab = 'latex'
-        
-        # Show current active tab
-        st.markdown(f"**Active:** {st.session_state.active_main_tab.title()}")
-        
-        # Job posting input (always available)
-        st.markdown("---")
-        st.subheader("🎯 Job Posting")
-        job_description = st.text_area(
-            "Paste job posting for AI optimization:",
-            height=120,
-            key="job_posting_input",
-            placeholder="Paste job description here..."
-        )
-        
-        if job_description:
-            if st.button("🎯 Optimize Resume for Job", key="optimize_for_job"):
-                optimize_resume_for_job(job_description)
-                st.rerun()
     
     # Main content area - changes based on active tab
     if st.session_state.active_main_tab == 'details':
         # Show data entry forms
-        st.markdown("<h2 class='section-header'>📋 Resume Details</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 class='resume-details-header'>📋 Resume Details</h2>", unsafe_allow_html=True)
         user_data_changed = render_sidebar()
 
     elif st.session_state.active_main_tab == 'visual':
@@ -260,11 +345,11 @@ def main():
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            st.markdown("<h2 class='section-header'>📝 LaTeX Editor</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 class='section-header'>LaTeX Editor</h2>", unsafe_allow_html=True)
             latex_changed = render_latex_editor()
 
         with col2:
-            st.markdown("<h2 class='section-header'>📄 PDF Preview</h2>", unsafe_allow_html=True)
+            st.markdown("<h2 class='section-header'>PDF Preview</h2>", unsafe_allow_html=True)
             render_pdf_preview(force_update=latex_changed)
     
     # Footer

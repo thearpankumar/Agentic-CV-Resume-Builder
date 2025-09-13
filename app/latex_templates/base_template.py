@@ -43,7 +43,7 @@ class BaseTemplate:
 \usepackage[utf8]{inputenc}
 \usepackage[
     margin=0.5in,
-    top=0.6in,
+    top=0.5in,
     bottom=0.6in
 ]{geometry}
 \usepackage{enumitem}
@@ -52,6 +52,7 @@ class BaseTemplate:
 \usepackage{xcolor}
 \usepackage{helvet}
 \usepackage{fontawesome5}
+\usepackage{needspace}
 
 % --- COLOR & HYPERLINK DEFINITION ---
 \definecolor{darkblue}{RGB}{0, 51, 102}
@@ -78,7 +79,7 @@ class BaseTemplate:
   {0em}
   {#1}
   [\vspace{2pt}\noindent\rule{\linewidth}{0.8pt}]
-\titlespacing*{\section}{0pt}{10pt}{8pt}
+\titlespacing*{\section}{0pt}{8pt}{6pt}
 
 % Sidebar Sections (smaller headings)
 \titleformat{\subsection}
@@ -86,7 +87,7 @@ class BaseTemplate:
   {}
   {0em}
   {}
-\titlespacing*{\subsection}{0pt}{8pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{3pt}
 
 % --- LIST SPACING ---
 \setlist[itemize]{
@@ -176,9 +177,11 @@ class BaseTemplate:
     def _generate_arpan_layout(self, user_data: Dict[str, Any], active_sections: List[str], section_order: List[str]) -> str:
         """Generate Arpan style two-column layout"""
         latex_parts = []
-        
-        # Two-column layout
+
+        # Prevent page break and ensure content stays together
         latex_parts.append("% --- TWO-COLUMN LAYOUT ---")
+        latex_parts.append("\\needspace{4cm}")  # Ensure at least 4cm space or page break
+        latex_parts.append("\\noindent")
         latex_parts.append("\\begin{minipage}[t]{0.3\\textwidth}")
         latex_parts.append("\\begin{sidebarenv}")
         latex_parts.append("    \\sffamily")
