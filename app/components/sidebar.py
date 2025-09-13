@@ -1284,9 +1284,8 @@ def load_user_by_email(email: str):
         return None
 
 def authenticate_user_simple(email: str, password: str):
-    """Simple authentication using direct SQL"""
+    """Simple authentication using SQLAlchemy"""
     try:
-        import psycopg2
         from utils.auth import verify_password
         
         # Use SQLAlchemy instead of raw SQL
