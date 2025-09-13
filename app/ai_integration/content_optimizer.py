@@ -7,8 +7,9 @@ from database.connection import get_db_session
 class ContentOptimizer:
     """Handles AI-powered content optimization for resumes"""
     
-    def __init__(self):
-        self.groq_client = GroqClient()
+    def __init__(self, api_key: str = None):
+        self.api_key = api_key
+        self.groq_client = GroqClient(user_api_key=api_key)
     
     def optimize_resume_for_job(
         self,
@@ -21,6 +22,9 @@ class ContentOptimizer:
         Returns optimized user data with selection reasons
         """
         if not self.groq_client.is_available():
+            st.write(f"Debug: Groq client not available. User API key provided: {self.api_key is not None}")
+            st.write(f"Debug: API key length: {len(self.api_key) if self.api_key else 0}")
+            st.write(f"Debug: Groq client object: {self.groq_client.client}")
             st.warning("AI optimization not available. Using original content.")
             # Ensure we return the user_data in the expected format with metadata
             if isinstance(user_data, dict):

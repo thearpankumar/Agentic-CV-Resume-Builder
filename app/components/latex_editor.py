@@ -359,7 +359,9 @@ def generate_professional_summary():
         st.error("Please select a user first!")
         return
     
-    groq_client = GroqClient()
+    from components.sidebar import get_api_key_from_session
+    user_api_key = get_api_key_from_session()
+    groq_client = GroqClient(user_api_key=user_api_key)
     if groq_client.is_available():
         with st.spinner("AI is generating your professional summary..."):
             # Gather user data
@@ -399,7 +401,9 @@ def regenerate_professional_summary(user_feedback: str):
         st.error("Please select a user first!")
         return
     
-    groq_client = GroqClient()
+    from components.sidebar import get_api_key_from_session
+    user_api_key = get_api_key_from_session()
+    groq_client = GroqClient(user_api_key=user_api_key)
     if groq_client.is_available():
         with st.spinner("AI is improving your professional summary..."):
             user_data = gather_user_data()

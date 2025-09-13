@@ -129,6 +129,28 @@ class InteractiveSectionManager:
         Returns: dict of section_key -> enabled status
         """
         st.subheader("⚙️ Section Controls")
+        
+        # Custom CSS for light green toggle switches
+        st.markdown("""
+        <style>
+        /* Override all toggle colors with !important */
+        .stToggle * {
+            background-color: #90EE90 !important;
+        }
+        
+        /* Target everything related to toggles */
+        [data-testid="stToggle"] *,
+        [role="switch"] *,
+        [data-baseweb="toggle"] * {
+            background-color: #90EE90 !important;
+        }
+        
+        /* Nuclear option - target all divs inside toggle */
+        .stToggle div div div {
+            background-color: #90EE90 !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
         # Get content counts
         content_counts = self._get_content_counts(user_id) if user_id else {}
@@ -173,7 +195,7 @@ class InteractiveSectionManager:
                 disabled = count == 0
                 checkbox_value = st.session_state.active_sections.get(section, True) and ai_relevant
 
-                active_sections[section] = st.checkbox(
+                active_sections[section] = st.toggle(
                     label,
                     value=checkbox_value,
                     key=f"toggle_{section}",
@@ -201,7 +223,7 @@ class InteractiveSectionManager:
                 disabled = count == 0
                 checkbox_value = st.session_state.active_sections.get(section, True) and ai_relevant
 
-                active_sections[section] = st.checkbox(
+                active_sections[section] = st.toggle(
                     label,
                     value=checkbox_value,
                     key=f"toggle_{section}",

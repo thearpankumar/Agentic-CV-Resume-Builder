@@ -7,6 +7,7 @@ from database.queries import (
 )
 from utils.validators import DataValidator
 from ai_integration.groq_client import GroqClient
+from utils.auth import hash_password, show_password_dialog
 from config.settings import settings
 
 def get_user_api_key():
@@ -29,6 +30,12 @@ def get_user_api_key():
         
         st.markdown("---")
     return api_key
+
+def get_api_key_from_session():
+    """Get API key from session state without rendering widget"""
+    if settings.groq_api_key:
+        return settings.groq_api_key
+    return st.session_state.get('user_groq_api_key', '')
 
 def render_sidebar() -> bool:
     """
@@ -87,24 +94,101 @@ def render_user_section() -> bool:
         
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Load User", disabled=not email):
+            if st.button("Load User", disabled=not email, key="load_user_btn"):
                 if DataValidator.validate_email(email):
+                    # Check if user exists
                     user = load_user_by_email(email)
                     if user:
-                        st.session_state.current_user_id = user.id
-                        st.success(f"Loaded user: {user.name}")
-                        data_changed = True
+                        # Set the email for authentication and show dialog
+                        st.session_state.auth_email = email
+                        st.session_state.show_login_dialog = True
                     else:
                         st.error("User not found")
                 else:
                     st.error("Invalid email format")
         
+        # Show login dialog outside of button context
+        if st.session_state.get('show_login_dialog', False) and st.session_state.get('auth_email'):
+            st.markdown("### Enter Password to Access Account")
+            
+            with st.form("login_form_persistent"):
+                password_input = st.text_input("Password", type="password")
+                
+                col1_auth, col2_auth = st.columns(2)
+                with col1_auth:
+                    login_submitted = st.form_submit_button("Login")
+                with col2_auth:
+                    cancel_submitted = st.form_submit_button("Cancel")
+                
+                if login_submitted:
+                    if password_input:
+                        st.write("🔥 Authenticating...")
+                        authenticated_user = authenticate_user_simple(st.session_state.auth_email, password_input)
+                        if authenticated_user:
+                            st.session_state.current_user_id = authenticated_user.id
+                            st.session_state.show_login_dialog = False
+                            st.session_state.auth_email = None
+                            st.success(f"Welcome back, {authenticated_user.name}!")
+                            st.rerun()
+                        else:
+                            st.error("Invalid password")
+                    else:
+                        st.error("Please enter a password")
+                
+                if cancel_submitted:
+                    st.session_state.show_login_dialog = False
+                    st.session_state.auth_email = None
+                    st.rerun()
+        
         with col2:
-            if st.button("Create New User", disabled=not email):
+            if st.button("Create New User", disabled=not email, key="create_user_btn"):
                 if DataValidator.validate_email(email):
-                    data_changed |= create_new_user(email)
+                    # Check if user already exists
+                    existing_user = load_user_by_email(email)
+                    if existing_user:
+                        st.error("User with this email already exists")
+                    else:
+                        # Set the email for account creation and show dialog
+                        st.session_state.create_email = email
+                        st.session_state.show_create_dialog = True
                 else:
                     st.error("Invalid email format")
+    
+    # Show create account dialog outside of button context
+    if st.session_state.get('show_create_dialog', False) and st.session_state.get('create_email'):
+        st.markdown("### Create New Account")
+        
+        with st.form("create_form_persistent"):
+            password_input = st.text_input("Create Password", type="password")
+            confirm_password = st.text_input("Confirm Password", type="password")
+            
+            col1_create, col2_create = st.columns(2)
+            with col1_create:
+                create_submitted = st.form_submit_button("Create Account")
+            with col2_create:
+                cancel_submitted = st.form_submit_button("Cancel")
+            
+            if create_submitted:
+                if password_input and confirm_password:
+                    if password_input == confirm_password:
+                        if len(password_input) >= 6:
+                            st.write("🔥 Creating account...")
+                            success = create_new_user_with_password(st.session_state.create_email, password_input)
+                            if success:
+                                st.session_state.show_create_dialog = False
+                                st.session_state.create_email = None
+                                st.rerun()
+                        else:
+                            st.error("Password must be at least 6 characters long")
+                    else:
+                        st.error("Passwords do not match")
+                else:
+                    st.error("Please fill in both password fields")
+            
+            if cancel_submitted:
+                st.session_state.show_create_dialog = False
+                st.session_state.create_email = None
+                st.rerun()
     
     # User data form (if user is selected)
     if st.session_state.current_user_id:
@@ -119,7 +203,15 @@ def render_user_form() -> bool:
     # Load current user data
     user_data = load_current_user_data()
     
-    with st.expander("Edit Profile Information", expanded=False):
+    # Clear form keys if user changed
+    if 'last_user_id' not in st.session_state or st.session_state.last_user_id != st.session_state.current_user_id:
+        form_keys = ['profile_name', 'profile_phone', 'profile_location', 'profile_linkedin', 'profile_github']
+        for key in form_keys:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.session_state.last_user_id = st.session_state.current_user_id
+    
+    with st.expander("Edit Profile Information", expanded=True):
         name = st.text_input("Full Name", value=user_data.get('name', ''), key="profile_name")
         phone = st.text_input("Phone Number", value=user_data.get('phone', ''), key="profile_phone")
         location = st.text_input("Location", value=user_data.get('location', ''), key="profile_location")
@@ -1191,6 +1283,66 @@ def load_user_by_email(email: str):
         st.error(f"Error loading user: {e}")
         return None
 
+def authenticate_user_simple(email: str, password: str):
+    """Simple authentication using direct SQL"""
+    try:
+        import psycopg2
+        from utils.auth import verify_password
+        from config.settings import settings
+        
+        # Use database URL from settings
+        conn = psycopg2.connect(settings.database_url)
+        
+        cur = conn.cursor()
+        cur.execute("SELECT id, name, email, password_hash FROM users WHERE email = %s", (email,))
+        result = cur.fetchone()
+        
+        if result:
+            user_id, name, user_email, password_hash = result
+            if password_hash and verify_password(password, password_hash):
+                cur.close()
+                conn.close()
+                return type('User', (), {
+                    'id': user_id, 
+                    'name': name or 'User', 
+                    'email': user_email
+                })()
+        
+        cur.close()
+        conn.close()
+        return None
+        
+    except Exception as e:
+        st.error(f"Authentication error: {e}")
+        return None
+
+def create_new_user_with_password(email: str, password: str) -> bool:
+    """Create new user with password"""
+    try:
+        session = next(get_db_session())
+        
+        # Hash the password
+        password_hash = hash_password(password)
+        
+        # Create user with basic info
+        user_data = {
+            "email": email,
+            "name": email.split("@")[0].title()  # Default name from email
+        }
+        
+        user = UserQueries.create_user(session, user_data, password_hash)
+        session.commit()
+        
+        # Set as current user
+        st.session_state.current_user_id = user.id
+        st.success(f"Account created successfully! Welcome, {user.name}!")
+        
+        session.close()
+        return True
+    except Exception as e:
+        st.error(f"Error creating user: {e}")
+        return False
+
 def create_new_user(email: str) -> bool:
     """Create new user"""
     try:
@@ -1212,6 +1364,8 @@ def load_current_user_data() -> Dict[str, Any]:
     try:
         session = next(get_db_session())
         user = UserQueries.get_user_by_id(session, st.session_state.current_user_id)
+        session.close()
+        
         return {
             'name': user.name or '',
             'email': user.email or '',

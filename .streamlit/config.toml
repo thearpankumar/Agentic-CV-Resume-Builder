@@ -1,7 +1,7 @@
 [theme]
 # Professional dark theme configuration
 base = "dark"
-primaryColor = "#E8E8E8"  # Light grey for buttons and highlights
+primaryColor = "#90EE90"  # Light green for buttons and highlights (toggles)
 backgroundColor = "#0F0F0F"  # Very dark background
 secondaryBackgroundColor = "#1A1A1A"  # Slightly lighter dark for widgets
 textColor = "#E8E8E8"  # Light grey text for readability

@@ -254,7 +254,7 @@ def optimize_resume_for_job(job_description: str):
         st.error("Please select a user first!")
         return
     
-    user_api_key = get_user_api_key()
+    user_api_key = st.session_state.get('user_api_key', '')
     groq_client = GroqClient(user_api_key)
     if groq_client.is_available():
         with st.spinner("AI is optimizing your resume for this job..."):
@@ -288,6 +288,12 @@ def main():
     """Main application function"""
     initialize_session_state()
     
+    # Get user API key at the start
+    user_api_key = get_user_api_key()
+    
+    # Store in session state for use throughout the app
+    st.session_state.user_api_key = user_api_key
+    
     # Header
     st.markdown("<h1 class='main-header'>AI-Powered CV Resume Builder</h1>", unsafe_allow_html=True)
     
@@ -295,9 +301,9 @@ def main():
     if not check_database_connection():
         st.stop()
     
-    # Check for Groq API key
-    if not settings.is_groq_available:
-        st.warning("Groq API key not found in settings. Please add it to your .env file for AI features.")
+    # Check for Groq API key - now handled by user input
+    # if not settings.is_groq_available:
+    #     st.warning("Groq API key not found in settings. Please add it to your .env file for AI features.")
     
     # Initialize active tab in session state
     if 'active_main_tab' not in st.session_state:

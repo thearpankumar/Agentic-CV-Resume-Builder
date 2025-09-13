@@ -9,13 +9,30 @@ from .models import (
 
 class UserQueries:
     @staticmethod
-    def create_user(session: Session, user_data: Dict[str, Any]) -> User:
+    def create_user(session: Session, user_data: Dict[str, Any], password_hash: str = None) -> User:
         """Create a new user"""
+        if password_hash:
+            user_data['password_hash'] = password_hash
         user = User(**user_data)
         session.add(user)
         session.commit()
         session.refresh(user)
         return user
+    
+    @staticmethod
+    def authenticate_user(session: Session, email: str, password: str) -> Optional[User]:
+        """Authenticate user with email and password"""
+        try:
+            from utils.auth import verify_password
+            
+            user = session.query(User).filter(User.email == email).first()
+            if user and user.password_hash:
+                if verify_password(password, user.password_hash):
+                    return user
+            return None
+        except Exception as e:
+            print(f"Authentication error: {e}")
+            return None
     
     @staticmethod
     def get_user_by_email(session: Session, email: str) -> Optional[User]:

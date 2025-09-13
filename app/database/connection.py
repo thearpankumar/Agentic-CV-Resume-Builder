@@ -31,6 +31,13 @@ class DatabaseConnection:
                 echo=self.database_config["echo"],
                 connect_args=connect_args
             )
+            
+            # Set search_path after connection for cloud databases
+            if "localhost" not in self.database_config["url"]:
+                with self.engine.connect() as conn:
+                    conn.execute(text("SET search_path TO public"))
+                    conn.commit()
+            
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         except Exception as e:
             st.error(f"Failed to connect to database: {e}")

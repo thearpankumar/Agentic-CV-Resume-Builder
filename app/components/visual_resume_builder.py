@@ -12,7 +12,8 @@ class VisualResumeBuilder:
 
     def __init__(self):
         self.section_manager = InteractiveSectionManager()
-        self.content_optimizer = ContentOptimizer()
+        # ContentOptimizer will be initialized when needed with user API key
+        self.content_optimizer = None
         self.session_id = st.session_state.get('session_id', 'default')
 
     def render_visual_builder(self, user_id: Optional[int] = None) -> bool:
@@ -166,6 +167,11 @@ class VisualResumeBuilder:
                 return
 
             with st.spinner("AI is analyzing and optimizing your content..."):
+                # Initialize content optimizer with user API key
+                from components.sidebar import get_api_key_from_session
+                user_api_key = get_api_key_from_session()
+                self.content_optimizer = ContentOptimizer(api_key=user_api_key)
+                
                 # Run optimization
                 optimized_data = self.content_optimizer.optimize_resume_for_job(
                     user_data, job_description, user_id
@@ -187,6 +193,17 @@ class VisualResumeBuilder:
                 if section_relevance:
                     # Update active sections based on AI analysis
                     st.session_state.ai_filtered_sections = section_relevance
+                    
+                    # Also update active_sections to reflect AI recommendations
+                    if 'active_sections' not in st.session_state:
+                        st.session_state.active_sections = {}
+                    
+                    # Update active sections based on AI relevance
+                    for section, is_relevant in section_relevance.items():
+                        if not is_relevant:
+                            # AI says this section is not relevant, uncheck it
+                            st.session_state.active_sections[section] = False
+                        # If AI says it's relevant, keep current user preference or default to True
 
                 st.success("AI optimization completed!")
 

@@ -1,6 +1,7 @@
 import streamlit as st
 from typing import List, Dict, Any
 from ai_integration.content_optimizer import ContentOptimizer
+from components.sidebar import get_api_key_from_session
 
 def render_section_manager() -> bool:
     """
@@ -142,8 +143,11 @@ def optimize_resume_for_job(job_description: str) -> bool:
         # Gather current user data
         user_data = gather_user_data()
         
-        # Initialize content optimizer
-        optimizer = ContentOptimizer()
+        # Initialize content optimizer with user API key
+        user_api_key = get_api_key_from_session()
+        st.write(f"Debug: Retrieved API key length: {len(user_api_key) if user_api_key else 0}")
+        st.write(f"Debug: Session state keys: {list(st.session_state.keys())}")
+        optimizer = ContentOptimizer(api_key=user_api_key)
         
         # Optimize content
         optimized_data = optimizer.optimize_resume_for_job(
@@ -166,7 +170,8 @@ def generate_summary_only(job_description: str) -> bool:
     """Generate only professional summary"""
     try:
         user_data = gather_user_data()
-        optimizer = ContentOptimizer()
+        user_api_key = get_api_key_from_session()
+        optimizer = ContentOptimizer(api_key=user_api_key)
         
         summary = optimizer.generate_summary_for_job(
             user_data, job_description, st.session_state.current_user_id
@@ -195,7 +200,8 @@ def optimize_projects_only(job_description: str) -> bool:
             st.warning("No projects found to optimize")
             return False
         
-        optimizer = ContentOptimizer()
+        user_api_key = get_api_key_from_session()
+        optimizer = ContentOptimizer(api_key=user_api_key)
         selected_projects, reasons = optimizer.get_project_recommendations(
             projects, job_description
         )
@@ -221,7 +227,8 @@ def show_job_fit_analysis(job_description: str):
     """Show job fit analysis"""
     try:
         user_data = gather_user_data()
-        optimizer = ContentOptimizer()
+        user_api_key = get_api_key_from_session()
+        optimizer = ContentOptimizer(api_key=user_api_key)
         
         # Get skills gap analysis
         current_skills = extract_skills_from_data(user_data)
@@ -261,7 +268,8 @@ def show_optimization_suggestions(job_description: str = ""):
     """Show general optimization suggestions"""
     try:
         user_data = gather_user_data()
-        optimizer = ContentOptimizer()
+        user_api_key = get_api_key_from_session()
+        optimizer = ContentOptimizer(api_key=user_api_key)
         
         suggestions = optimizer.get_optimization_suggestions(user_data, job_description)
         

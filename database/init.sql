@@ -5,6 +5,7 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255),
     email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255), -- Added for authentication
     phone VARCHAR(50),
     linkedin_url VARCHAR(255),
     github_url VARCHAR(255),
