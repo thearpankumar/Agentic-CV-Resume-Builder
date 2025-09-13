@@ -557,7 +557,8 @@ Requirements:
 - Quantify achievements where possible
 - Make it more compelling to recruiters
 - Ensure ATS keyword optimization
-- Maintain similar length
+- LIMIT TO EXACTLY 30-35 WORDS MAXIMUM
+- Be concise and impactful
 
 IMPROVED {content_type.upper()}:"""
     
