@@ -36,9 +36,9 @@ class PDFGenerator:
         """Check if LaTeX is installed and available"""
         try:
             result = subprocess.run(
-                ['pdflatex', '--version'], 
-                capture_output=True, 
-                text=True, 
+                ['pdflatex', '--version'],
+                capture_output=True,
+                text=False,  # Handle as bytes to avoid UTF-8 decoding errors
                 timeout=10
             )
             return result.returncode == 0
@@ -120,13 +120,13 @@ class PDFGenerator:
             # Compile LaTeX to PDF
             result = subprocess.run(
                 [
-                    'pdflatex', 
+                    'pdflatex',
                     '-interaction=nonstopmode',
                     '-output-directory', self.temp_dir,
                     tex_path
                 ],
                 capture_output=True,
-                text=True,
+                text=False,  # Handle as bytes to avoid UTF-8 decoding errors
                 timeout=settings.latex_timeout,
                 cwd=self.temp_dir
             )
@@ -147,8 +147,14 @@ class PDFGenerator:
             if os.path.exists(pdf_path):
                 return pdf_path
             else:
-                # Log compilation errors for debugging
-                error_log = result.stderr + result.stdout
+                # Log compilation errors for debugging - safely decode bytes
+                try:
+                    stderr_text = result.stderr.decode('utf-8', errors='replace') if result.stderr else ""
+                    stdout_text = result.stdout.decode('utf-8', errors='replace') if result.stdout else ""
+                    error_log = stderr_text + stdout_text
+                except Exception as decode_error:
+                    error_log = f"Could not decode LaTeX output: {decode_error}"
+
                 print(f"LaTeX compilation failed: {error_log[-1000:]}")  # Last 1000 chars
                 try:
                     st.error(f"LaTeX compilation failed. Check the LaTeX syntax.")
