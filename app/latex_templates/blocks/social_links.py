@@ -61,6 +61,9 @@ class SocialLinksBlock:
 
     def _clean_linkedin_url(self, linkedin_url: str) -> str:
         """Clean LinkedIn URL to get username"""
+        if 'linkedin.com' not in linkedin_url:
+            return linkedin_url.strip()
+
         linkedin_clean = linkedin_url.strip()
         prefixes_to_remove = [
             'https://www.linkedin.com/in/',
@@ -78,6 +81,9 @@ class SocialLinksBlock:
 
     def _clean_github_url(self, github_url: str) -> str:
         """Clean GitHub URL to get username"""
+        if 'github.com' not in github_url:
+            return github_url.strip()
+
         github_clean = github_url.strip()
         prefixes_to_remove = [
             'https://github.com/',

@@ -57,11 +57,11 @@ class DataValidator:
             errors.append("Invalid phone number format")
         
         linkedin_url = user_data.get('linkedin_url', '')
-        if linkedin_url and not DataValidator.validate_url(linkedin_url):
+        if linkedin_url and 'linkedin.com' not in linkedin_url:
             errors.append("Invalid LinkedIn URL format")
-        
+
         github_url = user_data.get('github_url', '')
-        if github_url and not DataValidator.validate_url(github_url):
+        if github_url and 'github.com' not in github_url:
             errors.append("Invalid GitHub URL format")
         
         return len(errors) == 0, errors
