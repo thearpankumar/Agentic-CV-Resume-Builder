@@ -11,6 +11,19 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.settings import settings
 
+# Alternative PDF generation imports
+try:
+    from weasyprint import HTML, CSS
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib import colors
+    ALTERNATIVE_PDF_AVAILABLE = True
+except ImportError:
+    ALTERNATIVE_PDF_AVAILABLE = False
+
 class PDFGenerator:
     """Handles LaTeX to PDF conversion"""
     
@@ -57,32 +70,44 @@ class PDFGenerator:
         Generate PDF from user data
         Returns: (pdf_path, latex_code) or (None, error_message)
         """
-        if not self.ensure_latex_installed():
-            return None, "LaTeX not installed. Please install texlive-full or similar package."
-        
-        try:
-            # Create template instance with font size
-            template = BaseTemplate(template_style, font_size)
-            
-            # Set defaults if not provided
-            if active_sections is None:
-                active_sections = template.get_default_section_order()
-            if section_order is None:
-                section_order = template.get_default_section_order()
-            
-            # Generate LaTeX code
-            latex_code = template.generate_latex(user_data, active_sections, section_order)
-            
-            # Convert to PDF
-            pdf_path = self.compile_latex_to_pdf(latex_code)
-            
-            if pdf_path:
-                return pdf_path, latex_code
-            else:
-                return None, "PDF compilation failed"
-                
-        except Exception as e:
-            return None, f"Error generating PDF: {str(e)}"
+        # Try LaTeX first, fallback to alternative methods
+        if self.ensure_latex_installed():
+            try:
+                # Create template instance with font size
+                template = BaseTemplate(template_style, font_size)
+
+                # Set defaults if not provided
+                if active_sections is None:
+                    active_sections = template.get_default_section_order()
+                if section_order is None:
+                    section_order = template.get_default_section_order()
+
+                # Generate LaTeX code
+                latex_code = template.generate_latex(user_data, active_sections, section_order)
+
+                # Convert to PDF
+                pdf_path = self.compile_latex_to_pdf(latex_code)
+
+                if pdf_path:
+                    return pdf_path, latex_code
+                else:
+                    return None, "PDF compilation failed"
+
+            except Exception as e:
+                return None, f"Error generating PDF: {str(e)}"
+
+        # Fallback to alternative PDF generation
+        if ALTERNATIVE_PDF_AVAILABLE:
+            try:
+                pdf_path = self.generate_pdf_with_reportlab(user_data, active_sections, section_order)
+                if pdf_path:
+                    return pdf_path, "Generated using ReportLab (LaTeX alternative)"
+                else:
+                    return None, "Alternative PDF generation failed"
+            except Exception as e:
+                return None, f"Error with alternative PDF generation: {str(e)}"
+
+        return None, "No PDF generation methods available. Please install LaTeX or required Python packages."
     
     def generate_pdf_from_latex(self, latex_code: str) -> Optional[str]:
         """
@@ -289,6 +314,210 @@ class PDFGenerator:
         except Exception:
             pass  # Ignore cleanup errors
     
+    def _map_section_names(self, sections: List[str]) -> List[str]:
+        """Map section names from UI to data structure names"""
+        section_mapping = {
+            'professional_summary': 'professional_summaries',
+            'professional_summaries': 'professional_summaries',
+            'projects': 'projects',
+            'professional_experience': 'professional_experience',
+            'research_experience': 'research_experience',
+            'education': 'education',
+            'technical_skills': 'technical_skills',
+            'certifications': 'certifications'
+        }
+        return [section_mapping.get(section, section) for section in sections]
+
+    def generate_pdf_with_reportlab(
+        self,
+        user_data: Dict[str, Any],
+        active_sections: List[str] = None,
+        section_order: List[str] = None
+    ) -> Optional[str]:
+        """
+        Generate PDF using ReportLab as fallback when LaTeX is not available
+        """
+        try:
+            filename = "current_resume_reportlab.pdf"
+            pdf_path = os.path.join(self.temp_dir, filename)
+
+            # Create document
+            doc = SimpleDocTemplate(pdf_path, pagesize=A4)
+            styles = getSampleStyleSheet()
+
+            # Custom styles
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=18,
+                spaceAfter=12,
+                alignment=1  # Center alignment
+            )
+
+            heading_style = ParagraphStyle(
+                'CustomHeading',
+                parent=styles['Heading2'],
+                fontSize=14,
+                spaceAfter=6,
+                textColor=colors.darkblue
+            )
+
+            normal_style = ParagraphStyle(
+                'CustomNormal',
+                parent=styles['Normal'],
+                fontSize=10,
+                spaceAfter=6
+            )
+
+            story = []
+
+            # Header section
+            user = user_data.get('user', {})
+            if user.get('name'):
+                story.append(Paragraph(user['name'], title_style))
+
+            contact_info = []
+            if user.get('email'):
+                contact_info.append(user['email'])
+            if user.get('phone'):
+                contact_info.append(user['phone'])
+            if user.get('location'):
+                contact_info.append(user['location'])
+
+            if contact_info:
+                story.append(Paragraph(' | '.join(contact_info), normal_style))
+
+            # Social links
+            social_links = []
+            if user.get('linkedin_url'):
+                social_links.append(f"LinkedIn: {user['linkedin_url']}")
+            if user.get('github_url'):
+                social_links.append(f"GitHub: {user['github_url']}")
+
+            if social_links:
+                story.append(Paragraph(' | '.join(social_links), normal_style))
+
+            story.append(Spacer(1, 12))
+
+            # Handle different active_sections formats
+            if isinstance(active_sections, dict):
+                # Dictionary format: {section_name: True/False}
+                # Map section names and filter active ones
+                mapped_active = {}
+                for section_key, is_active in active_sections.items():
+                    mapped_key = self._map_section_names([section_key])[0]
+                    mapped_active[mapped_key] = is_active
+                active_section_list = [k for k, v in mapped_active.items() if v]
+            elif isinstance(active_sections, list):
+                # List format: [section_name1, section_name2, ...]
+                active_section_list = self._map_section_names(active_sections)
+            else:
+                # Default to all sections
+                active_section_list = ['professional_summaries', 'professional_experience', 'projects',
+                                     'education', 'technical_skills', 'certifications', 'research_experience']
+
+            # Define section order if not provided
+            if not section_order:
+                if isinstance(active_sections, dict):
+                    # Use mapped active sections as order
+                    section_order = active_section_list
+                else:
+                    section_order = ['professional_summaries', 'professional_experience', 'projects',
+                                   'education', 'technical_skills', 'certifications', 'research_experience']
+            else:
+                section_order = self._map_section_names(section_order)
+
+            # Process each section - strictly follow active sections
+            for section in section_order:
+                # Skip section if it's not in active_section_list
+                if section not in active_section_list:
+                    continue
+
+                if section == 'professional_summaries' and user_data.get('professional_summaries'):
+                    story.append(Paragraph("Professional Summary", heading_style))
+                    for summary in user_data['professional_summaries']:
+                        if summary.get('generated_summary'):
+                            story.append(Paragraph(summary['generated_summary'], normal_style))
+                    story.append(Spacer(1, 6))
+
+                elif section == 'professional_experience' and user_data.get('professional_experience'):
+                    story.append(Paragraph("Professional Experience", heading_style))
+                    for exp in user_data['professional_experience']:
+                        title = f"<b>{exp.get('position', '')}</b> - {exp.get('company', '')}"
+                        if exp.get('start_date') or exp.get('end_date'):
+                            title += f" ({exp.get('start_date', '')} - {exp.get('end_date', '')})"
+                        story.append(Paragraph(title, normal_style))
+                        if exp.get('description'):
+                            story.append(Paragraph(exp['description'], normal_style))
+                    story.append(Spacer(1, 6))
+
+                elif section == 'projects' and user_data.get('projects'):
+                    story.append(Paragraph("Projects", heading_style))
+                    for project in user_data['projects']:
+                        title = f"<b>{project.get('title', '')}</b>"
+                        if project.get('start_date') or project.get('end_date'):
+                            title += f" ({project.get('start_date', '')} - {project.get('end_date', '')})"
+                        story.append(Paragraph(title, normal_style))
+                        if project.get('description'):
+                            story.append(Paragraph(project['description'], normal_style))
+                        if project.get('technologies'):
+                            story.append(Paragraph(f"<i>Technologies: {project['technologies']}</i>", normal_style))
+                    story.append(Spacer(1, 6))
+
+                elif section == 'education' and user_data.get('education'):
+                    story.append(Paragraph("Education", heading_style))
+                    for edu in user_data['education']:
+                        title = f"<b>{edu.get('degree', '')}</b> - {edu.get('institution', '')}"
+                        if edu.get('graduation_date'):
+                            title += f" ({edu['graduation_date']})"
+                        story.append(Paragraph(title, normal_style))
+                        if edu.get('gpa_percentage'):
+                            story.append(Paragraph(f"GPA: {edu['gpa_percentage']}", normal_style))
+                    story.append(Spacer(1, 6))
+
+                elif section == 'technical_skills' and user_data.get('technical_skills'):
+                    story.append(Paragraph("Technical Skills", heading_style))
+                    for skill in user_data['technical_skills']:
+                        if skill.get('category') and skill.get('skills'):
+                            story.append(Paragraph(f"<b>{skill['category']}:</b> {skill['skills']}", normal_style))
+                    story.append(Spacer(1, 6))
+
+                elif section == 'certifications' and user_data.get('certifications'):
+                    story.append(Paragraph("Certifications", heading_style))
+                    for cert in user_data['certifications']:
+                        title = f"<b>{cert.get('title', '')}</b>"
+                        if cert.get('issuer'):
+                            title += f" - {cert['issuer']}"
+                        if cert.get('date_obtained'):
+                            title += f" ({cert['date_obtained']})"
+                        story.append(Paragraph(title, normal_style))
+                    story.append(Spacer(1, 6))
+
+                elif section == 'research_experience' and user_data.get('research_experience'):
+                    story.append(Paragraph("Research Experience", heading_style))
+                    for research in user_data['research_experience']:
+                        title = f"<b>{research.get('title', '')}</b>"
+                        if research.get('start_date') or research.get('end_date'):
+                            title += f" ({research.get('start_date', '')} - {research.get('end_date', '')})"
+                        story.append(Paragraph(title, normal_style))
+                        if research.get('description'):
+                            story.append(Paragraph(research['description'], normal_style))
+                    story.append(Spacer(1, 6))
+
+            # Build PDF
+            doc.build(story)
+
+            if os.path.exists(pdf_path):
+                print(f"ReportLab PDF generated successfully: {pdf_path}")
+                return pdf_path
+            else:
+                print("ReportLab PDF generation failed")
+                return None
+
+        except Exception as e:
+            print(f"Error in ReportLab PDF generation: {str(e)}")
+            return None
+
     def __del__(self):
         """Cleanup when object is destroyed"""
         self.cleanup()

@@ -191,16 +191,25 @@ class InteractiveSectionManager:
                 if not ai_relevant:
                     label += " ❌"
 
-                # Disable if no content or AI excluded
+                # Only disable if no content - allow user to override AI suggestions
                 disabled = count == 0
-                checkbox_value = st.session_state.active_sections.get(section, True) and ai_relevant
+
+                # User can manually override AI suggestions
+                # If user has explicitly set this toggle before, respect that choice
+                user_toggle_key = f"toggle_{section}"
+                if user_toggle_key in st.session_state:
+                    # User has interacted with this toggle - respect their choice
+                    checkbox_value = st.session_state.active_sections.get(section, True)
+                else:
+                    # Initial state - use AI suggestion if available, otherwise default to True
+                    checkbox_value = st.session_state.active_sections.get(section, True) and ai_relevant
 
                 active_sections[section] = st.toggle(
                     label,
                     value=checkbox_value,
-                    key=f"toggle_{section}",
+                    key=user_toggle_key,
                     disabled=disabled,
-                    help="AI excluded this section for this job posting" if not ai_relevant else None
+                    help=f"AI suggests excluding this section for this job posting, but you can override manually" if not ai_relevant else None
                 )
 
         with col2:
@@ -219,16 +228,25 @@ class InteractiveSectionManager:
                 if not ai_relevant:
                     label += " ❌"
 
-                # Disable if no content
+                # Only disable if no content - allow user to override AI suggestions
                 disabled = count == 0
-                checkbox_value = st.session_state.active_sections.get(section, True) and ai_relevant
+
+                # User can manually override AI suggestions
+                # If user has explicitly set this toggle before, respect that choice
+                user_toggle_key = f"toggle_{section}"
+                if user_toggle_key in st.session_state:
+                    # User has interacted with this toggle - respect their choice
+                    checkbox_value = st.session_state.active_sections.get(section, True)
+                else:
+                    # Initial state - use AI suggestion if available, otherwise default to True
+                    checkbox_value = st.session_state.active_sections.get(section, True) and ai_relevant
 
                 active_sections[section] = st.toggle(
                     label,
                     value=checkbox_value,
-                    key=f"toggle_{section}",
+                    key=user_toggle_key,
                     disabled=disabled,
-                    help="AI excluded this section for this job posting" if not ai_relevant else None
+                    help=f"AI suggests excluding this section for this job posting, but you can override manually" if not ai_relevant else None
                 )
 
         # Update session state

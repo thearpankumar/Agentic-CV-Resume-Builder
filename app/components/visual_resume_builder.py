@@ -316,15 +316,9 @@ class VisualResumeBuilder:
             # Get current section organization
             sidebar_sections, main_sections, active_sections = self.section_manager.get_organized_sections()
 
-            # Apply AI filtering if available
-            ai_filtered_sections = st.session_state.get('ai_filtered_sections')
-            if ai_filtered_sections:
-                # Filter sections based on AI analysis
-                filtered_active_sections = {}
-                for section, is_active in active_sections.items():
-                    ai_relevant = ai_filtered_sections.get(section, True)  # Default to True if not in AI analysis
-                    filtered_active_sections[section] = is_active and ai_relevant
-                active_sections = filtered_active_sections
+            # User manual selections always take priority over AI suggestions
+            # AI filtering is only for initial suggestions - user can override manually
+            # No need to filter based on AI if user has made manual selections
 
             # Filter to only active sections
             active_sidebar = [s for s in sidebar_sections if active_sections.get(s, False)]
