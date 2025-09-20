@@ -9,5 +9,5 @@ streamlit-ace>=0.1.1
 streamlit-pdf-viewer>=0.0.26
 streamlit-sortables>=0.2.0
 bcrypt>=4.3.0
-weasyprint>=66.0
 reportlab>=4.4.3
+fpdf2>=2.7.4

@@ -13,7 +13,6 @@ from config.settings import settings
 
 # Alternative PDF generation imports
 try:
-    from weasyprint import HTML, CSS
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter, A4
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
