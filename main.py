@@ -197,9 +197,10 @@ def initialize_session_state():
     if 'active_sections' not in st.session_state:
         st.session_state.active_sections = [
             "professional_summary",
-            "projects", 
+            "projects",
             "professional_experience",
             "research_experience",
+            "academic_collaborations",
             "education",
             "technical_skills"
         ]
@@ -335,8 +336,42 @@ def main():
             st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
-        
-    
+
+        # Resume Settings - Persistent across all tabs
+        st.markdown("---")
+        st.subheader("⚙️ Resume Settings")
+
+        # One-page limit toggle using session state for persistence
+        current_setting = st.session_state.get('enforce_one_page_limit', True)
+
+        multi_page_enabled = st.checkbox(
+            "📄 Enable Multi-page Resume",
+            value=not current_setting,
+            key="persistent_multi_page_toggle",
+            help="When checked, allows comprehensive multi-page resumes with all your data"
+        )
+
+        # Update session state
+        st.session_state.enforce_one_page_limit = not multi_page_enabled
+
+        # Visual feedback
+        if multi_page_enabled:
+            st.success("✅ Multi-page mode enabled")
+        else:
+            st.info("📄 Single-page mode enabled")
+
+        # Template style selector
+        template_style = st.selectbox(
+            "Template Style",
+            ["arpan", "simple"],
+            index=0 if st.session_state.get('template_style', 'arpan') == 'arpan' else 1,
+            key="persistent_template_selector"
+        )
+
+        # Update session state
+        st.session_state.template_style = template_style
+
+
     # Main content area - changes based on active tab
     if st.session_state.active_main_tab == 'details':
         # Show data entry forms

@@ -8,13 +8,15 @@ from .blocks.education import EducationBlock
 from .blocks.skills import SkillsBlock
 from .blocks.certs import CertificationsBlock
 from .blocks.social_links import SocialLinksBlock
+from .blocks.collaboration import CollaborationBlock
 
 class BaseTemplate:
     """Base class for LaTeX resume templates"""
     
-    def __init__(self, template_style: str = "arpan", font_size: str = "10pt"):
+    def __init__(self, template_style: str = "arpan", font_size: str = "10pt", enforce_one_page_limit: bool = True):
         self.template_style = template_style
         self.font_size = font_size
+        self.enforce_one_page_limit = enforce_one_page_limit
         self.blocks = {
             "header": HeaderBlock(template_style),
             "professional_summary": SummaryBlock(template_style),
@@ -24,6 +26,7 @@ class BaseTemplate:
             "education": EducationBlock(template_style),
             "technical_skills": SkillsBlock(template_style),
             "certifications": CertificationsBlock(template_style),
+            "academic_collaborations": CollaborationBlock(template_style),
             "social_links": SocialLinksBlock(template_style)
         }
     
@@ -35,74 +38,83 @@ class BaseTemplate:
             return self._get_simple_preamble()
     
     def _get_arpan_preamble(self) -> str:
-        """Arpan style preamble (modern, two-column)"""
-        preamble = r"""
-\documentclass[FONT_SIZE,a4paper]{article}
+        """Arpan style preamble (modern, responsive layout)"""
+        # Adjust margins based on page limit enforcement
+        if self.enforce_one_page_limit:
+            margin_settings = r"""margin=0.5in,
+    top=0.5in,
+    bottom=0.6in"""
+        else:
+            margin_settings = r"""margin=0.75in,
+    top=0.75in,
+    bottom=0.75in"""
+
+        preamble = f"""
+\\documentclass[FONT_SIZE,a4paper]{{article}}
 
 % --- PACKAGES ---
-\usepackage[utf8]{inputenc}
-\usepackage[
-    margin=0.5in,
-    top=0.5in,
-    bottom=0.6in
-]{geometry}
-\usepackage{enumitem}
-\usepackage[explicit]{titlesec}
-\usepackage{hyperref}
-\usepackage{xcolor}
-\usepackage{helvet}
-\usepackage{fontawesome5}
-\usepackage{needspace}
+\\usepackage[utf8]{{inputenc}}
+\\usepackage[
+    {margin_settings}
+]{{geometry}}
+\\usepackage{{enumitem}}
+\\usepackage[explicit]{{titlesec}}
+\\usepackage{{hyperref}}
+\\usepackage{{xcolor}}
+\\usepackage{{helvet}}
+\\usepackage{{fontawesome5}}
+\\usepackage{{needspace}}
+\\usepackage{{paracol}}
 
 % --- COLOR & HYPERLINK DEFINITION ---
-\definecolor{darkblue}{RGB}{0, 51, 102}
-\definecolor{graytext}{RGB}{80, 80, 80}
-\hypersetup{
+\\definecolor{{darkblue}}{{RGB}}{{0, 51, 102}}
+\\definecolor{{graytext}}{{RGB}}{{80, 80, 80}}
+\\hypersetup{{
     colorlinks=true,
     linkcolor=darkblue,
     urlcolor=darkblue,
     citecolor=darkblue,
-    pdftitle={Resume},
-    pdfauthor={Resume Builder}
-}
+    pdftitle={{Resume}},
+    pdfauthor={{Resume Builder}}
+}}
 
 % --- PAGE & FONT SETUP ---
-\pagestyle{empty}
-\renewcommand{\familydefault}{\sfdefault}
-\setlength{\parindent}{0pt}
+\\pagestyle{{empty}}
+\\renewcommand{{\\familydefault}}{{\\sfdefault}}
+\\setlength{{\\parindent}}{{0pt}}
 
 % --- ROBUST SECTION FORMATTING ---
 % Main sections (medium size headings)
-\titleformat{\section}
-  {\normalsize\bfseries\sffamily\color{darkblue}}
-  {}
-  {0em}
-  {#1}
-  [\vspace{2pt}\noindent\rule{\linewidth}{0.8pt}]
-\titlespacing*{\section}{0pt}{8pt}{6pt}
+\\titleformat{{\\section}}
+  {{\\normalsize\\bfseries\\sffamily\\color{{darkblue}}}}
+  {{}}
+  {{0em}}
+  {{#1}}
+  [\\vspace{{2pt}}\\noindent\\rule{{\\linewidth}}{{0.8pt}}]
+\\titlespacing*{{\\section}}{{0pt}}{{8pt}}{{6pt}}
 
 % Sidebar Sections (smaller headings)
-\titleformat{\subsection}
-  {\small\sffamily\bfseries\color{black}}
-  {}
-  {0em}
-  {}
-\titlespacing*{\subsection}{0pt}{6pt}{3pt}
+\\titleformat{{\\subsection}}
+  {{\\small\\sffamily\\bfseries\\color{{black}}}}
+  {{}}
+  {{0em}}
+  {{}}
+\\titlespacing*{{\\subsection}}{{0pt}}{{6pt}}{{3pt}}
 
 % --- LIST SPACING ---
-\setlist[itemize]{
+\\setlist[itemize]{{
     noitemsep,
     topsep=2pt,
     leftmargin=*,
     itemsep=2pt,
     parsep=2pt
-}
+}}
 
 % --- CUSTOM ENVIRONMENTS ---
 % Sidebar environment with smaller font
-\newenvironment{sidebarenv}
-  {\small}
-  {}
+\\newenvironment{{sidebarenv}}
+  {{\\small}}
+  {{}}
 """
         return preamble.replace("FONT_SIZE", self.font_size)
     
@@ -175,40 +187,80 @@ class BaseTemplate:
         return "\n".join(latex_parts)
     
     def _generate_arpan_layout(self, user_data: Dict[str, Any], active_sections: List[str], section_order: List[str]) -> str:
-        """Generate Arpan style two-column layout"""
+        """Generate Arpan style layout (two-column for single page, single-column for multi-page)"""
         latex_parts = []
 
-        # Prevent page break and ensure content stays together
-        latex_parts.append("% --- TWO-COLUMN LAYOUT ---")
-        latex_parts.append("\\needspace{4cm}")  # Ensure at least 4cm space or page break
-        latex_parts.append("\\noindent")
-        latex_parts.append("\\begin{minipage}[t]{0.3\\textwidth}")
-        latex_parts.append("\\begin{sidebarenv}")
-        latex_parts.append("    \\sffamily")
+        if self.enforce_one_page_limit:
+            # Single-page mode: Use minipage two-column layout like docs/main.tex
+            latex_parts.append("% --- TWO-COLUMN LAYOUT (SINGLE PAGE) ---")
+            latex_parts.append("\\needspace{4cm}")
+            latex_parts.append("\\noindent")
+            latex_parts.append("\\begin{minipage}[t]{0.3\\textwidth}")
+            latex_parts.append("\\begin{sidebarenv}")
+            latex_parts.append("    \\sffamily")
 
-        # Left sidebar sections - social links always included (static)
-        sidebar_sections = ["education", "technical_skills", "certifications"]
-        for section in sidebar_sections:
-            if section in active_sections and section in self.blocks:
-                latex_parts.append(self.blocks[section].generate(user_data))
+            # Left sidebar sections
+            sidebar_sections = ["education", "technical_skills", "certifications"]
+            for section in sidebar_sections:
+                if section in active_sections and section in self.blocks:
+                    latex_parts.append(self.blocks[section].generate(user_data))
 
-        # Always add social links to sidebar (static, not controlled by AI)
-        latex_parts.append(self.blocks["social_links"].generate(user_data))
+            # Always add social links to sidebar
+            latex_parts.append(self.blocks["social_links"].generate(user_data))
 
-        latex_parts.append("\\end{sidebarenv}")
-        latex_parts.append("\\end{minipage}")
-        latex_parts.append("\\hspace{0.05\\textwidth}")
-        latex_parts.append("\\begin{minipage}[t]{0.65\\textwidth}")
-        latex_parts.append("    \\sffamily")
-        
-        # Right main sections
-        main_sections = [s for s in section_order if s not in sidebar_sections and s in active_sections]
-        for section in main_sections:
-            if section in self.blocks:
-                latex_parts.append(self.blocks[section].generate(user_data))
-        
-        latex_parts.append("\\end{minipage}")
-        
+            latex_parts.append("\\end{sidebarenv}")
+            latex_parts.append("\\end{minipage}")
+            latex_parts.append("\\hspace{0.05\\textwidth}")
+            latex_parts.append("\\begin{minipage}[t]{0.65\\textwidth}")
+            latex_parts.append("    \\sffamily")
+
+            # Right main sections
+            main_sections = [s for s in section_order if s not in sidebar_sections and s in active_sections]
+            for section in main_sections:
+                if section in self.blocks:
+                    latex_parts.append(self.blocks[section].generate(user_data))
+
+            latex_parts.append("\\end{minipage}")
+        else:
+            # Multi-page mode: Use two-column layout that can flow across pages (matching docs/main.tex exactly)
+            latex_parts.append("% --- TWO-COLUMN LAYOUT (MULTI-PAGE FLOW) ---")
+            latex_parts.append("\\columnratio{0.3,0.65}")  # Set column ratios: 30% left, 65% right
+            latex_parts.append("\\setlength{\\columnsep}{0.05\\textwidth}")  # 5% separation between columns
+            latex_parts.append("\\begin{paracol}{2}")
+
+            # Left sidebar sections (column 1) - 30% width like docs/main.tex
+            latex_parts.append("% Left column - sidebar sections (30% width)")
+            latex_parts.append("\\begin{sloppypar}")  # Better line breaking
+            latex_parts.append("\\sffamily % Use sans-serif font for the entire sidebar")
+            latex_parts.append("\\raggedright % Prevent text justification that could cause overflow")
+            latex_parts.append("\\hsize=0.3\\textwidth % Explicitly set column width")
+
+            sidebar_sections = ["education", "technical_skills", "certifications"]
+            for section in sidebar_sections:
+                if section in active_sections and section in self.blocks:
+                    latex_parts.append(self.blocks[section].generate(user_data))
+
+            # Always add social links to sidebar
+            latex_parts.append(self.blocks["social_links"].generate(user_data))
+            latex_parts.append("\\end{sloppypar}")
+
+            # Right main sections (column 2) - 65% width like docs/main.tex
+            latex_parts.append("% Right column - main sections (65% width)")
+            latex_parts.append("\\switchcolumn")
+            latex_parts.append("\\begin{sloppypar}")  # Better line breaking
+            latex_parts.append("\\sffamily")
+            latex_parts.append("\\raggedright % Prevent text justification that could cause overflow")
+            latex_parts.append("\\hsize=0.65\\textwidth % Explicitly set column width")
+
+            main_sections = [s for s in section_order if s not in sidebar_sections and s in active_sections]
+            for section in main_sections:
+                if section in self.blocks:
+                    latex_parts.append(self.blocks[section].generate(user_data))
+
+            latex_parts.append("\\end{sloppypar}")
+
+            latex_parts.append("\\end{paracol}")
+
         return "\n".join(latex_parts)
     
     def _generate_simple_layout(self, user_data: Dict[str, Any], active_sections: List[str], section_order: List[str]) -> str:
@@ -227,8 +279,9 @@ class BaseTemplate:
         return [
             "professional_summary",
             "projects",
-            "professional_experience", 
+            "professional_experience",
             "research_experience",
+            "academic_collaborations",
             "education",
             "technical_skills",
             "certifications"

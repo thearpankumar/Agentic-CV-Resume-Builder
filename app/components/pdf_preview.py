@@ -502,10 +502,14 @@ def render_pdf_analytics():
                 
                 # Content recommendations
                 st.write("**Recommendations:**")
+                enforce_limit = st.session_state.get('enforce_one_page_limit', True)
+
                 if word_count < 200:
                     st.warning("Consider adding more content to your resume")
-                elif word_count > 500:
+                elif enforce_limit and word_count > 500:
                     st.warning("Your resume might be too long. Consider condensing.")
+                elif not enforce_limit and word_count > 800:
+                    st.info("Very comprehensive resume - ensure all content is relevant")
                 else:
                     st.success("Good content length!")
                 
@@ -516,8 +520,12 @@ def check_pdf_page_count():
     """Check if PDF exceeds one page and warn user"""
     if st.session_state.pdf_path and os.path.exists(st.session_state.pdf_path):
         try:
-            # This would require PyPDF2 or similar library
-            # For now, we'll implement a basic check
-            st.info("💡 **One-Page Resume Tip:** Keep your resume concise and focused on key achievements.")
+            # Check if one-page limit is enforced
+            enforce_limit = st.session_state.get('enforce_one_page_limit', True)
+
+            if enforce_limit:
+                # This would require PyPDF2 or similar library
+                # For now, we'll implement a basic check
+                st.info("💡 **One-Page Resume Tip:** Keep your resume concise and focused on key achievements.")
         except Exception:
             pass

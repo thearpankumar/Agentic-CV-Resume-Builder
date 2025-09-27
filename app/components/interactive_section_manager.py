@@ -13,6 +13,7 @@ class InteractiveSectionManager:
             "projects": "Projects",
             "professional_experience": "Professional Experience",
             "research_experience": "Research Experience",
+            "academic_collaborations": "Academic Collaborations",
             "education": "Education",
             "technical_skills": "Technical Skills",
             "certifications": "Certifications"
@@ -20,7 +21,7 @@ class InteractiveSectionManager:
 
         # Default organization for two-column layout
         self.default_sidebar_sections = ["education", "technical_skills", "certifications"]
-        self.default_main_sections = ["professional_summary", "projects", "professional_experience", "research_experience"]
+        self.default_main_sections = ["professional_summary", "projects", "professional_experience", "research_experience", "academic_collaborations"]
 
         # Initialize session state
         self._initialize_session_state()
@@ -33,6 +34,17 @@ class InteractiveSectionManager:
             st.session_state.main_sections = self.default_main_sections.copy()
         if 'section_organization_changed' not in st.session_state:
             st.session_state.section_organization_changed = False
+
+        # Update existing session state to include new sections if they're missing
+        current_main_sections = st.session_state.main_sections.copy()
+        if 'academic_collaborations' not in current_main_sections:
+            # Add academic_collaborations after research_experience if it exists, or at the end
+            if 'research_experience' in current_main_sections:
+                idx = current_main_sections.index('research_experience') + 1
+                current_main_sections.insert(idx, 'academic_collaborations')
+            else:
+                current_main_sections.append('academic_collaborations')
+            st.session_state.main_sections = current_main_sections
 
     def render_section_organizer(self, user_id: Optional[int] = None) -> Tuple[List[str], List[str]]:
         """
@@ -167,6 +179,12 @@ class InteractiveSectionManager:
                     (st.session_state.sidebar_sections + st.session_state.main_sections)
                 }
 
+        # Ensure all current sections are in active_sections
+        all_current_sections = st.session_state.sidebar_sections + st.session_state.main_sections
+        for section in all_current_sections:
+            if section not in st.session_state.active_sections:
+                st.session_state.active_sections[section] = True
+
         active_sections = {}
 
         col1, col2 = st.columns(2)
@@ -289,6 +307,7 @@ class InteractiveSectionManager:
                 'projects': len(user_data.get('projects', [])),
                 'professional_experience': len(user_data.get('professional_experience', [])),
                 'research_experience': len(user_data.get('research_experience', [])),
+                'academic_collaborations': len(user_data.get('academic_collaborations', [])),
                 'education': len(user_data.get('education', [])),
                 'technical_skills': len(user_data.get('technical_skills', [])),
                 'certifications': len(user_data.get('certifications', []))

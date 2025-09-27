@@ -1883,3 +1883,35 @@ def clear_edit_collaboration_session_state():
     for key in edit_keys:
         if key in st.session_state:
             del st.session_state[key]
+
+def render_resume_settings():
+    """Render resume settings section"""
+    with st.expander("PDF Generation Settings", expanded=False):
+        # One-page limit toggle
+        enforce_one_page = st.checkbox(
+            "☑️ Enforce One-Page Limit",
+            value=st.session_state.get('enforce_one_page_limit', True),
+            key="enforce_one_page_limit_checkbox",
+            help="When enabled, the resume will be optimized for a single page with warnings for excessive content. When disabled, multi-page resumes are supported."
+        )
+
+        # Always keep session state in sync with checkbox
+        st.session_state.enforce_one_page_limit = enforce_one_page
+
+        if enforce_one_page:
+            st.info("🗒️ Resume will be optimized for single-page format")
+        else:
+            st.info("📄 Multi-page resume format enabled")
+
+        # Additional settings can be added here in the future
+        # Template style selection
+        template_style = st.selectbox(
+            "Template Style",
+            ["arpan", "simple"],
+            index=0 if st.session_state.get('template_style', 'arpan') == 'arpan' else 1,
+            key="template_style_selector",
+            help="Choose the visual style for your resume"
+        )
+
+        # Always keep session state in sync with selectbox
+        st.session_state.template_style = template_style

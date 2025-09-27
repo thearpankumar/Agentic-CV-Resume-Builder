@@ -341,7 +341,7 @@ class GroqClient:
             # Fallback: include all sections with content
             sections_to_check = [
                 'professional_summaries', 'projects', 'professional_experience',
-                'research_experience', 'education', 'technical_skills', 'certifications'
+                'research_experience', 'academic_collaborations', 'education', 'technical_skills', 'certifications'
             ]
             return {section: bool(user_data.get(section, [])) for section in sections_to_check}
 
@@ -371,7 +371,7 @@ class GroqClient:
             # Fallback: include all sections with content
             sections_to_check = [
                 'professional_summaries', 'projects', 'professional_experience',
-                'research_experience', 'education', 'technical_skills', 'certifications'
+                'research_experience', 'academic_collaborations', 'education', 'technical_skills', 'certifications'
             ]
             return {section: bool(user_data.get(section, [])) for section in sections_to_check}
     
@@ -675,6 +675,7 @@ ANALYSIS:"""
             'projects': 'Projects',
             'professional_experience': 'Professional Experience',
             'research_experience': 'Research Experience',
+            'academic_collaborations': 'Academic Collaborations',
             'education': 'Education',
             'technical_skills': 'Technical Skills',
             'certifications': 'Certifications'
@@ -694,6 +695,9 @@ ANALYSIS:"""
                 elif section_key == 'technical_skills':
                     categories = [skill.get('category', '') for skill in section_data[:3]]
                     preview = f"Skills: {', '.join(categories)}"
+                elif section_key == 'academic_collaborations':
+                    collaborations = [collab.get('title', 'Untitled') for collab in section_data[:3]]
+                    preview = f"Collaborations: {', '.join(collaborations)}"
                 else:
                     preview = f"{count} items"
 
@@ -724,6 +728,7 @@ professional_summaries: INCLUDE/EXCLUDE
 projects: INCLUDE/EXCLUDE
 professional_experience: INCLUDE/EXCLUDE
 research_experience: INCLUDE/EXCLUDE
+academic_collaborations: INCLUDE/EXCLUDE
 education: INCLUDE/EXCLUDE
 technical_skills: INCLUDE/EXCLUDE
 certifications: INCLUDE/EXCLUDE"""

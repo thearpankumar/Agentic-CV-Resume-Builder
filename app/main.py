@@ -197,9 +197,10 @@ def initialize_session_state():
     if 'active_sections' not in st.session_state:
         st.session_state.active_sections = [
             "professional_summary",
-            "projects", 
+            "projects",
             "professional_experience",
             "research_experience",
+            "academic_collaborations",
             "education",
             "technical_skills"
         ]
@@ -211,6 +212,8 @@ def initialize_session_state():
         st.session_state.job_posting_input = ""
     if 'font_size' not in st.session_state:
         st.session_state.font_size = "10pt"
+    if 'enforce_one_page_limit' not in st.session_state:
+        st.session_state.enforce_one_page_limit = True
 
 def check_database_connection():
     """Check if database is connected"""
@@ -313,6 +316,27 @@ def main():
     with st.sidebar:
         st.markdown("<h2 class='section-header'>Resume Builder</h2>", unsafe_allow_html=True)
 
+        # Settings at the top for visibility
+        st.markdown("### ⚙️ Settings")
+
+        # Multi-page toggle
+        multi_page_enabled = st.checkbox(
+            "📄 Enable Multi-page Resume",
+            value=not st.session_state.get('enforce_one_page_limit', True),
+            key="top_multi_page_toggle",
+            help="Check this to allow multi-page comprehensive resumes"
+        )
+
+        # Update session state
+        st.session_state.enforce_one_page_limit = not multi_page_enabled
+
+        if multi_page_enabled:
+            st.success("Multi-page mode ON")
+        else:
+            st.info("Single-page mode ON")
+
+        st.markdown("---")
+
         # Tab selection buttons - stacked horizontally (one below the other)
         st.markdown('<div class="sidebar-nav-tabs">', unsafe_allow_html=True)
 
@@ -335,8 +359,36 @@ def main():
             st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
-        
-    
+
+        # Resume Settings in the same navigation area
+        st.markdown("---")
+        st.markdown("### ⚙️ Settings")
+
+        # One-page limit toggle
+        enforce_one_page = st.checkbox(
+            "📄 Multi-page Resume",
+            value=not st.session_state.get('enforce_one_page_limit', True),
+            key="nav_multi_page_toggle",
+            help="Enable for multi-page comprehensive resumes"
+        )
+
+        # Update session state (invert because checkbox is for multi-page)
+        st.session_state.enforce_one_page_limit = not enforce_one_page
+
+        # Template style
+        template_style = st.selectbox(
+            "Template",
+            ["arpan", "simple"],
+            index=0 if st.session_state.get('template_style', 'arpan') == 'arpan' else 1,
+            key="nav_template_selector"
+        )
+
+        # Update session state
+        st.session_state.template_style = template_style
+
+        # Debug message to confirm this code runs
+        st.write("🔧 Debug: Settings loaded")
+
     # Main content area - changes based on active tab
     if st.session_state.active_main_tab == 'details':
         # Show data entry forms

@@ -47,8 +47,14 @@ class VisualResumeBuilder:
                 st.markdown("---")
 
                 # Informational message
-                if not st.session_state.get('ai_optimized_data'):
-                    st.info("**Tip:** Run AI optimization above to get a tailored resume with selected projects and optimized content!")
+                enforce_one_page_limit = st.session_state.get('enforce_one_page_limit', True)
+                ai_optimized = st.session_state.get('ai_optimized_data')
+
+                if not ai_optimized:
+                    if not enforce_one_page_limit:
+                        st.info("**Multi-page mode:** Resume will include ALL your data from the database for a comprehensive document.")
+                    else:
+                        st.info("**Tip:** Run AI optimization above to get a tailored resume with selected projects and optimized content!")
                 else:
                     st.success("Your resume will include optimized content and selected projects.")
 
@@ -316,14 +322,34 @@ class VisualResumeBuilder:
             # Get current section organization
             sidebar_sections, main_sections, active_sections = self.section_manager.get_organized_sections()
 
+            # Check if one-page limit is enforced and if AI optimization was used
+            enforce_one_page_limit = st.session_state.get('enforce_one_page_limit', True)
+            ai_was_used = ai_optimized_data and isinstance(ai_optimized_data, dict)
+
             # User manual selections always take priority over AI suggestions
             # AI filtering is only for initial suggestions - user can override manually
-            # No need to filter based on AI if user has made manual selections
 
-            # Filter to only active sections
-            active_sidebar = [s for s in sidebar_sections if active_sections.get(s, False)]
-            active_main = [s for s in main_sections if active_sections.get(s, False)]
-            all_active_sections = active_sidebar + active_main
+            if not enforce_one_page_limit and not ai_was_used:
+                # Multi-page mode without AI: Include ALL sections from database
+                all_available_sections = [
+                    "professional_summary",
+                    "projects",
+                    "professional_experience",
+                    "research_experience",
+                    "academic_collaborations",
+                    "education",
+                    "technical_skills",
+                    "certifications"
+                ]
+                # Use the default section order from the template for consistency
+                from latex_templates.base_template import BaseTemplate
+                template = BaseTemplate()
+                all_active_sections = template.get_default_section_order()
+            else:
+                # Single-page mode OR AI was used: Respect user's manual selections
+                active_sidebar = [s for s in sidebar_sections if active_sections.get(s, False)]
+                active_main = [s for s in main_sections if active_sections.get(s, False)]
+                all_active_sections = active_sidebar + active_main
 
             # Generate PDF
             pdf_generator = PDFGenerator(self.session_id)

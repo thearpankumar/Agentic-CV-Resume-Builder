@@ -153,6 +153,24 @@ class UserQueries:
                 'display_order': cert.display_order
             })
 
+        # Get academic collaborations
+        collaborations = session.query(AcademicCollaboration).filter(AcademicCollaboration.user_id == user_id).all()
+        user_dict['academic_collaborations'] = []
+        for collab in collaborations:
+            user_dict['academic_collaborations'].append({
+                'id': collab.id,
+                'project_title': collab.project_title,
+                'collaboration_type': collab.collaboration_type,
+                'institution': collab.institution,
+                'collaborators': collab.collaborators,
+                'role': collab.role,
+                'description': collab.description,
+                'start_date': collab.start_date,
+                'end_date': collab.end_date,
+                'publication_url': collab.publication_url,
+                'display_order': collab.display_order
+            })
+
         # Get professional summaries
         summaries = session.query(ProfessionalSummary).filter(ProfessionalSummary.user_id == user_id).all()
         user_dict['professional_summaries'] = []

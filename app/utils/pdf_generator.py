@@ -72,8 +72,12 @@ class PDFGenerator:
         # Try LaTeX first, fallback to alternative methods
         if self.ensure_latex_installed():
             try:
-                # Create template instance with font size
-                template = BaseTemplate(template_style, font_size)
+                # Get one-page limit setting from session state
+                import streamlit as st
+                enforce_one_page_limit = st.session_state.get('enforce_one_page_limit', True) if 'st' in globals() else True
+
+                # Create template instance with font size and one-page setting
+                template = BaseTemplate(template_style, font_size, enforce_one_page_limit)
 
                 # Set defaults if not provided
                 if active_sections is None:
@@ -215,15 +219,19 @@ class PDFGenerator:
         # Sample data for template
         sample_data = self.get_sample_data()
         
-        # Create template instance with font size
-        template = BaseTemplate(template_style, font_size)
-        
+        # Get one-page limit setting from session state
+        import streamlit as st
+        enforce_one_page_limit = st.session_state.get('enforce_one_page_limit', True) if 'st' in globals() else True
+
+        # Create template instance with font size and one-page setting
+        template = BaseTemplate(template_style, font_size, enforce_one_page_limit)
+
         # Set defaults if not provided
         if active_sections is None:
             active_sections = template.get_default_section_order()
         if section_order is None:
             section_order = template.get_default_section_order()
-        
+
         return template.generate_latex(sample_data, active_sections, section_order)
     
     def get_sample_data(self) -> Dict[str, Any]:
